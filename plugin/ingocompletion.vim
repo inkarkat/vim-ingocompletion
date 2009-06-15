@@ -73,14 +73,14 @@ if &completeopt =~# 'longest'
     inoremap <script> <expr> <C-p> pumvisible() ? '<C-p>' : '<C-p><SID>CompleteoptLongestSelectPrev'
 
     " Install <Plug>CompleteoptLongestSelect for all built-in completion types.
-    imap <C-x><C-k> <C-x><C-k><Plug>CompleteoptLongestSelect
-    imap <C-x><C-t> <C-x><C-t><Plug>CompleteoptLongestSelect
-    imap <C-x><C-]> <C-x><C-]><Plug>CompleteoptLongestSelect
-    imap <C-x><C-f> <C-x><C-f><Plug>CompleteoptLongestSelect
-    imap <C-x><C-v> <C-x><C-v><Plug>CompleteoptLongestSelect
-    imap <C-x><C-u> <C-x><C-u><Plug>CompleteoptLongestSelect
-    imap <C-x><C-o> <C-x><C-o><Plug>CompleteoptLongestSelect
-    imap <C-x>s     <C-x>s<Plug>CompleteoptLongestSelect
+    inoremap <script> <C-x><C-k> <C-x><C-k><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-t> <C-x><C-t><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-]> <C-x><C-]><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-f> <C-x><C-f><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-v> <C-x><C-v><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-u> <C-x><C-u><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-o> <C-x><C-o><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x>s     <C-x>s<SID>CompleteoptLongestSelectNext
 
     " All completion mappings that allow repetition need a special mapping: To be
     " able to repeat, the match must have been inserted via CTRL-N/P, not just
