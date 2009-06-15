@@ -35,8 +35,6 @@ let g:loaded_ingocompletion = 1
 
 " Add overloads to allow end of completion with <Esc> in additon to CTRL-E and
 " to accept the currently selected match with <CR> in addition to CTRL-Y. 
-" Note: With the complete longest+pre-select, the <Esc> mapping isn't actually
-" necessary. But I keep it e.g. due to the Vim ignorance mentioned below. 
 inoremap <expr> <Esc>      pumvisible() ? '<C-e>' : '<Esc>'
 inoremap <expr> <CR>       pumvisible() ? '<C-y>' : '<CR>'
 
@@ -64,6 +62,8 @@ if &completeopt =~# 'longest'
     inoremap <Plug>CompleteoptLongestSelect     <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
     inoremap  <SID>CompleteoptLongestSelectNext <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
     inoremap  <SID>CompleteoptLongestSelectPrev <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
+    " Integration into ingosupertab.vim. 
+    let g:IngoSuperTab_complete = "\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>"
 
     " Install <Plug>CompleteoptLongestSelect for the built-in generic
     " completion. 
