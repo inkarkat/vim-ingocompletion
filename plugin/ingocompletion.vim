@@ -8,6 +8,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	003	16-Jun-2009	ENH: Abort completion: <Esc> mapping ends
+"				completion and also erases the longest common
+"				string now. 
 "	002	14-Jun-2009	CTRL-N/P now use, not just select the subsequent
 "				match. That was impossible to implement because
 "				Vim ignores the mappings there. This alternative
@@ -33,9 +36,15 @@ let g:loaded_ingocompletion = 1
 "inoremap <expr> <C-CR>     pumvisible() ? "<C-N><C-Y>" : "<C-CR>"
 
 
-" Add overloads to allow end of completion with <Esc> in additon to CTRL-E and
-" to accept the currently selected match with <CR> in addition to CTRL-Y. 
-inoremap <expr> <Esc>      pumvisible() ? '<C-e>' : '<Esc>'
+" <Esc>			Abort completion, go back to what was typed. 
+"			In contrast to i_CTRL-E, this also erases the longest
+"			common string. 
+" <Enter>		Accept the currently selected match and stop completion.
+"			Alias for i_CTRL-Y. 
+" Abort completion, go back to what was typed.
+" Note: To implement the total abort of completion, all mappings that start a
+" completion must set an undo point (<C-g>u) beforehand. 
+inoremap <expr> <Esc>      pumvisible() ? '<C-e><C-o>u' : '<Esc>'
 inoremap <expr> <CR>       pumvisible() ? '<C-y>' : '<CR>'
 
 " Complete longest+preselect: On completion with multiple matches, insert the
@@ -63,35 +72,35 @@ if &completeopt =~# 'longest'
     inoremap  <SID>CompleteoptLongestSelectNext <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
     inoremap  <SID>CompleteoptLongestSelectPrev <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
     " Integration into ingosupertab.vim. 
-    let g:IngoSuperTab_complete = "\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>"
+    let g:IngoSuperTab_complete = "\<C-g>u\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>"
 
     " Install <Plug>CompleteoptLongestSelect for the built-in generic
     " completion. 
     " Note: These mappings are ignored in all <C-x><C-...> popups, they are only
     " active in <C-n>/<C-p>. 
-    inoremap <script> <expr> <C-n> pumvisible() ? '<C-n>' : '<C-n><SID>CompleteoptLongestSelectNext'
-    inoremap <script> <expr> <C-p> pumvisible() ? '<C-p>' : '<C-p><SID>CompleteoptLongestSelectPrev'
+    inoremap <script> <expr> <C-n> pumvisible() ? '<C-n>' : '<C-g>u<C-n><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-p> pumvisible() ? '<C-p>' : '<C-g>u<C-p><SID>CompleteoptLongestSelectPrev'
 
     " Install <Plug>CompleteoptLongestSelect for all built-in completion types.
-    inoremap <script> <C-x><C-k> <C-x><C-k><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-t> <C-x><C-t><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-]> <C-x><C-]><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-f> <C-x><C-f><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-v> <C-x><C-v><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-u> <C-x><C-u><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-o> <C-x><C-o><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x>s     <C-x>s<SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-k> <C-g>u<C-x><C-k><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-t> <C-g>u<C-x><C-t><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-]> <C-g>u<C-x><C-]><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-f> <C-g>u<C-x><C-f><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-v> <C-g>u<C-x><C-v><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-u> <C-g>u<C-x><C-u><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-o> <C-g>u<C-x><C-o><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x>s     <C-g>u<C-x>s<SID>CompleteoptLongestSelectNext
 
     " All completion mappings that allow repetition need a special mapping: To be
     " able to repeat, the match must have been inserted via CTRL-N/P, not just
     " selected. Committing the selection via CTRL-Y completely finishes the
     " completion and prevents repetition, so that cannot be used as a
     " workaround, neither. 
-    inoremap <script> <expr> <C-x><C-l> pumvisible() ? '<Up><C-n><C-x><C-l>' : '<C-x><C-l><SID>CompleteoptLongestSelectNext'
-    inoremap <script> <expr> <C-x><C-n> pumvisible() ? '<Up><C-n><C-x><C-n>' : '<C-x><C-n><SID>CompleteoptLongestSelectNext'
-    inoremap <script> <expr> <C-x><C-p> pumvisible() ? '<Down><C-p><C-x><C-p>' : '<C-x><C-p><SID>CompleteoptLongestSelectPrev'
-    inoremap <script> <expr> <C-x><C-i> pumvisible() ? '<Up><C-n><C-x><C-i>' : '<C-x><C-i><SID>CompleteoptLongestSelectNext'
-    inoremap <script> <expr> <C-x><C-d> pumvisible() ? '<Up><C-n><C-x><C-d>' : '<C-x><C-d><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-x><C-l> pumvisible() ? '<Up><C-n><C-x><C-l>' : '<C-g>u<C-x><C-l><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-x><C-n> pumvisible() ? '<Up><C-n><C-x><C-n>' : '<C-g>u<C-x><C-n><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-x><C-p> pumvisible() ? '<Down><C-p><C-x><C-p>' : '<C-g>u<C-x><C-p><SID>CompleteoptLongestSelectPrev'
+    inoremap <script> <expr> <C-x><C-i> pumvisible() ? '<Up><C-n><C-x><C-i>' : '<C-g>u<C-x><C-i><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-x><C-d> pumvisible() ? '<Up><C-n><C-x><C-d>' : '<C-g>u<C-x><C-d><SID>CompleteoptLongestSelectNext'
 else
     " Custom completion types are enhanced by defining custom mappings to the
     " <Plug>...Completion mappings in 00ingoplugin.vim. This is also defined
@@ -109,7 +118,7 @@ endif
 "			matching filename. 
 " CTRL-B		Use a match several entries back. 
 imap <C-]> <C-x><C-]>
-inoremap <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<C-x><C-f>'
+inoremap <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<C-g>u<C-x><C-f>'
 inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
