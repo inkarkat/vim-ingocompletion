@@ -8,6 +8,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	005	18-Jun-2009	Replaced temporary mark z with mark ". 
 "	004	17-Jun-2009	ENH: Now aborting completion without additional
 "				undo point. Instead, setting mark z via
 "				<Plug>CompleteoptLongestSetUndo. 
@@ -48,8 +49,8 @@ let g:loaded_ingocompletion = 1
 " Note: To implement the total abort of completion, all mappings that start a
 " completion must prepend <Plug>CompleteoptLongestSetUndo. 
 function! s:UndoLongest()
-    if line("'z") == line('.') && col("'z") < col('.')
-	return "\<C-\>\<C-o>dg`z"
+    if line("'\"") == line('.') && col("'\"") < col('.')
+	return "\<C-\>\<C-o>dg`\""
     endif
     return ''
 endfunction
