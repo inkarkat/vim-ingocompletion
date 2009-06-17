@@ -9,6 +9,9 @@
 "
 " REVISION	DATE		REMARKS 
 "	005	18-Jun-2009	Replaced temporary mark z with mark ". 
+"				Now setting undo mark via setpos() instead of
+"				using the 'm"' command. With this, completion
+"				with following words isn't broken anymore. 
 "	004	17-Jun-2009	ENH: Now aborting completion without additional
 "				undo point. Instead, setting mark z via
 "				<Plug>CompleteoptLongestSetUndo. 
@@ -76,8 +79,16 @@ inoremap <expr> <CR>       pumvisible() ? '<C-y>' : '<CR>'
 " keystroke to accept the current match, as one can simply continue to type. 
 if &completeopt =~# 'longest'
     " Set undo point to go back to what was typed when aborting completion. 
-    inoremap <Plug>CompleteoptLongestSetUndo <C-\><C-o>m"
-    inoremap <SID>CompleteoptLongestSetUndo <C-\><C-o>m"
+    function! s:SetUndo()
+	call setpos("'\"", getpos('.'))
+	return ''
+    endfunction
+    " Note: By using a :map-expr that doesn't return anything and setting the
+    " mark via setpos() instead of the 'm' command, subsequent CTRL-X CTRL-N
+    " commands can be used to continue the completion with following words. Any
+    " inserted key (even CTRL-R=...<CR>) would break this. 
+    inoremap <expr> <Plug>CompleteoptLongestSetUndo <SID>SetUndo()
+    inoremap <expr> <SID>CompleteoptLongestSetUndo <SID>SetUndo()
 
     " Note: :map-expr cannot be used here, it would be evaluated before the
     " preceding mapping that triggers the completion, thus pumvisible() would be
