@@ -76,8 +76,8 @@ inoremap <expr> <CR>       pumvisible() ? '<C-y>' : '<CR>'
 " keystroke to accept the current match, as one can simply continue to type. 
 if &completeopt =~# 'longest'
     " Set undo point to go back to what was typed when aborting completion. 
-    inoremap <Plug>CompleteoptLongestSetUndo <C-\><C-o>mz
-    inoremap <SID>CompleteoptLongestSetUndo <C-\><C-o>mz
+    inoremap <Plug>CompleteoptLongestSetUndo <C-\><C-o>m"
+    inoremap <SID>CompleteoptLongestSetUndo <C-\><C-o>m"
 
     " Note: :map-expr cannot be used here, it would be evaluated before the
     " preceding mapping that triggers the completion, thus pumvisible() would be
@@ -86,7 +86,7 @@ if &completeopt =~# 'longest'
     inoremap  <SID>CompleteoptLongestSelectNext <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
     inoremap  <SID>CompleteoptLongestSelectPrev <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
     " Integration into ingosupertab.vim. 
-    let g:IngoSuperTab_complete = "\<C-\>\<C-o>mz\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>"
+    let g:IngoSuperTab_complete = "\<C-\>\<C-o>m\"\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>"
 
     " Install <Plug>CompleteoptLongestSelect for the built-in generic
     " completion. 
