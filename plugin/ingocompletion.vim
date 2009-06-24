@@ -8,6 +8,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	006	25-Jun-2009	Now also using a function (s:Complete()) for
+"				g:IngoSuperTab_complete to be able to use
+"				s:SetUndo() instead of the m" command, which
+"				broke repetition of the completion via '.'. 
 "	005	18-Jun-2009	Replaced temporary mark z with mark ". 
 "				Now setting undo mark via setpos() instead of
 "				using the 'm"' command. With this, completion
@@ -99,13 +103,17 @@ if &completeopt =~# 'longest'
     inoremap  <SID>CompleteoptLongestSelectNext <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
     inoremap  <SID>CompleteoptLongestSelectPrev <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
     " Integration into ingosupertab.vim. 
-    let g:IngoSuperTab_complete = "\<C-\>\<C-o>m\"\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>"
+    function! s:Complete()
+	call s:SetUndo()
+	return "\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>"
+    endfunction
     function! s:ContinueComplete()
 	return (pumvisible() ? "\<Down>\<C-p>\<C-x>\<C-p>" : "\<C-x>\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>")
     endfunction
     function! s:function(name)
 	return function(substitute(a:name,'^s:',matchstr(expand('<sfile>'), '<SNR>\d\+_'),''))
     endfunction
+    let g:IngoSuperTab_complete = s:function('s:Complete')
     let g:IngoSuperTab_continueComplete = s:function('s:ContinueComplete')
     delfunction s:function
 
