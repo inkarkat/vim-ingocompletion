@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	007	07-Aug-2009	BF: Always defining <Plug>UndoLongest, not just
+"				for Complete longest+preselect. 
 "	006	25-Jun-2009	Now also using a function (s:Complete()) for
 "				g:IngoSuperTab_complete to be able to use
 "				s:SetUndo() instead of the m" command, which
@@ -37,26 +39,28 @@ if exists('g:loaded_ingocompletion') || (v:version < 700)
 endif
 let g:loaded_ingocompletion = 1
 
-" vimtip #1228, vimtip #1386: Completion popup selection like other IDEs. 
-" i_CTRL-Space		IDE-like generic completion (via 'complete'). 
-" i_CTRL-Enter		Shortcut that inserts the first match without selecting
-"			it first with <C-N>. 
-" The IDE completion keeps a menu item always highlighted. This way you can keep
-" typing characters to narrow the matches, and the nearest match will be
-" selected so that you can hit <Enter> at any time to insert it. 
-" <C-N> and <C-P> are still available as (non-selecting) alternatives, too. 
-"inoremap <expr> <C-Space>  pumvisible() ? "<C-N>" : "<C-N><C-R>=pumvisible() ? \"\\<lt>Down>\" : \"\"<CR>" 
-"inoremap <expr> <C-CR>     pumvisible() ? "<C-N><C-Y>" : "<C-CR>"
+" <Enter>		Accept the currently selected match and stop completion.
+"			Alias for i_CTRL-Y. 
+inoremap <expr> <CR> pumvisible() ? '<C-y>' : '<CR>'
 
 
 " <Esc>			Abort completion, go back to what was typed. 
 "			In contrast to i_CTRL-E, this also erases the longest
 "			common string. 
-" <Enter>		Accept the currently selected match and stop completion.
-"			Alias for i_CTRL-Y. 
-" Abort completion, go back to what was typed.
 " Note: To implement the total abort of completion, all mappings that start a
 " completion must prepend <Plug>CompleteoptLongestSetUndo. 
+"
+" Set undo point to go back to what was typed when aborting completion. 
+function! s:SetUndo()
+    call setpos("'\"", getpos('.'))
+    return ''
+endfunction
+" Note: By using a :map-expr that doesn't return anything and setting the
+" mark via setpos() instead of the 'm' command, subsequent CTRL-X CTRL-N
+" commands can be used to continue the completion with following words. Any
+" inserted key (even CTRL-R=...<CR>) would break this. 
+inoremap <expr> <Plug>CompleteoptLongestSetUndo <SID>SetUndo()
+inoremap <expr> <SID>CompleteoptLongestSetUndo <SID>SetUndo()
 function! s:UndoLongest()
     if line("'\"") == line('.') && col("'\"") < col('.')
 	return "\<C-\>\<C-o>dg`\""
@@ -64,7 +68,7 @@ function! s:UndoLongest()
     return ''
 endfunction
 inoremap <script> <expr> <Esc>      pumvisible() ? '<C-e>' . <SID>UndoLongest() : '<Esc>'
-inoremap <expr> <CR>       pumvisible() ? '<C-y>' : '<CR>'
+
 
 " Complete longest+preselect: On completion with multiple matches, insert the
 " longest common text AND pre-select (but not yet insert) the first match. 
@@ -84,18 +88,6 @@ inoremap <expr> <CR>       pumvisible() ? '<C-y>' : '<CR>'
 " (when no matches have a larger length than the current one) even save the
 " keystroke to accept the current match, as one can simply continue to type. 
 if &completeopt =~# 'longest'
-    " Set undo point to go back to what was typed when aborting completion. 
-    function! s:SetUndo()
-	call setpos("'\"", getpos('.'))
-	return ''
-    endfunction
-    " Note: By using a :map-expr that doesn't return anything and setting the
-    " mark via setpos() instead of the 'm' command, subsequent CTRL-X CTRL-N
-    " commands can be used to continue the completion with following words. Any
-    " inserted key (even CTRL-R=...<CR>) would break this. 
-    inoremap <expr> <Plug>CompleteoptLongestSetUndo <SID>SetUndo()
-    inoremap <expr> <SID>CompleteoptLongestSetUndo <SID>SetUndo()
-
     " Note: :map-expr cannot be used here, it would be evaluated before the
     " preceding mapping that triggers the completion, thus pumvisible() would be
     " always false. 
@@ -151,6 +143,7 @@ else
     inoremap <Plug>CompleteoptLongestSelect <Nop>
 endif
 
+
 " Shorten some commonly used insert completions. 
 " CTRL-]		Tag completion |i_CTRL-X_CTRL-]|
 " CTRL-F		File name completion |i_CTRL-X_CTRL-F|
@@ -163,5 +156,17 @@ endif
 imap <C-]> <C-x><C-]>
 inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>CompleteoptLongestSetUndo<C-x><C-f>'
 inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
+
+
+" vimtip #1228, vimtip #1386: Completion popup selection like other IDEs. 
+" i_CTRL-Space		IDE-like generic completion (via 'complete'). 
+" i_CTRL-Enter		Shortcut that inserts the first match without selecting
+"			it first with <C-N>. 
+" The IDE completion keeps a menu item always highlighted. This way you can keep
+" typing characters to narrow the matches, and the nearest match will be
+" selected so that you can hit <Enter> at any time to insert it. 
+" <C-N> and <C-P> are still available as (non-selecting) alternatives, too. 
+"inoremap <expr> <C-Space>  pumvisible() ? "<C-N>" : "<C-N><C-R>=pumvisible() ? \"\\<lt>Down>\" : \"\"<CR>" 
+"inoremap <expr> <C-CR>     pumvisible() ? "<C-N><C-Y>" : "<C-CR>"
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
