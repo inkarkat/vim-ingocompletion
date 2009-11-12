@@ -10,6 +10,9 @@
 " REVISION	DATE		REMARKS 
 "	007	07-Aug-2009	BF: Always defining <Plug>UndoLongest, not just
 "				for Complete longest+preselect. 
+"				Re-introduced IDE-like generic completion
+"				(i_CTRL-Space), now via the last-used user
+"				completion. 
 "	006	25-Jun-2009	Now also using a function (s:Complete()) for
 "				g:IngoSuperTab_complete to be able to use
 "				s:SetUndo() instead of the m" command, which
@@ -141,6 +144,8 @@ else
     " <Plug>...Completion mappings in 00ingoplugin.vim. This is also defined
     " when the "longest" option isn't set, so that no check is necessary there. 
     inoremap <Plug>CompleteoptLongestSelect <Nop>
+    inoremap <SID>CompleteoptLongestSelectNext <Nop>
+    inoremap <SID>CompleteoptLongestSelectPrev <Nop>
 endif
 
 
@@ -159,14 +164,15 @@ inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 
 
 " vimtip #1228, vimtip #1386: Completion popup selection like other IDEs. 
-" i_CTRL-Space		IDE-like generic completion (via 'complete'). 
-" i_CTRL-Enter		Shortcut that inserts the first match without selecting
-"			it first with <C-N>. 
-" The IDE completion keeps a menu item always highlighted. This way you can keep
-" typing characters to narrow the matches, and the nearest match will be
-" selected so that you can hit <Enter> at any time to insert it. 
-" <C-N> and <C-P> are still available as (non-selecting) alternatives, too. 
-"inoremap <expr> <C-Space>  pumvisible() ? "<C-N>" : "<C-N><C-R>=pumvisible() ? \"\\<lt>Down>\" : \"\"<CR>" 
-"inoremap <expr> <C-CR>     pumvisible() ? "<C-N><C-Y>" : "<C-CR>"
+" i_CTRL-Space		IDE-like generic completion (via the last-used user
+"			completion ('completefunc'). Also cycles through matches
+"			when the completion popup is visible. 
+"inoremap <expr> <C-Space>  pumvisible() ? "<C-N>" : "<C-N><C-R>=pumvisible() ? \"\\<lt>Down>\" : \"\"<CR>"
+if has('gui_running') || has('win32') || has('win64') 
+    inoremap <script> <expr> <C-Space> pumvisible() ? '<C-n>' : '<SID>CompleteoptLongestSetUndo<C-x><C-u><SID>CompleteoptLongestSelectNext'
+else
+    " On the Linux console, <C-Space> does not work, but <nul> does. 
+    inoremap <script> <expr> <nul> pumvisible() ? '<C-n>' : '<SID>CompleteoptLongestSetUndo<C-x><C-u><SID>CompleteoptLongestSelectNext'
+endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
