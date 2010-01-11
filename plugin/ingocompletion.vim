@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	008	13-Nov-2009	Added quick access accelerators 0-9 for the
+"				popup menu. 
 "	007	07-Aug-2009	BF: Always defining <Plug>UndoLongest, not just
 "				for Complete longest+preselect. 
 "				Re-introduced IDE-like generic completion
@@ -46,6 +48,41 @@ let g:loaded_ingocompletion = 1
 "			Alias for i_CTRL-Y. 
 inoremap <expr> <CR> pumvisible() ? '<C-y>' : '<CR>'
 
+"			Quick access accelerators for the popup menu: 
+" 1-6			In the popup menu: Accept the first, second, ... visible
+"			offered match and stop completion. 
+" 0, 9-7		In the popup menu: Accept the last, second-from-last,
+"			... visible offered match and stop completion. 
+"			These assume a freshly opened popup menu where no
+"			selection (via <Up>/<Down>/...) has yet been made. 
+inoremap <expr> 1 pumvisible() ? '<C-y>' : '1'
+inoremap <expr> 2 pumvisible() ? '<Down><C-y>' : '2'
+inoremap <expr> 3 pumvisible() ? '<Down><Down><C-y>' : '3'
+inoremap <expr> 4 pumvisible() ? '<Down><Down><Down><C-y>' : '4'
+inoremap <expr> 5 pumvisible() ? '<Down><Down><Down><Down><C-y>' : '5'
+inoremap <expr> 6 pumvisible() ? '<Down><Down><Down><Down><Down><C-y>' : '6'
+inoremap <expr> 0 pumvisible() ? '<PageDown><Down><C-y>' : '0'
+inoremap <expr> 9 pumvisible() ? '<PageDown><C-y>' : '9'
+inoremap <expr> 8 pumvisible() ? '<PageDown><Up><C-y>' : '8'
+inoremap <expr> 7 pumvisible() ? '<PageDown><Up><Up><C-y>' : '7'
+
+" <Esc>			Abort completion, go back to what was typed. 
+"			In contrast to i_CTRL-E, this also erases the longest
+"			common string. 
+" Note: To implement the total abort of completion, all mappings that start a
+" completion must prepend <Plug>CompleteoptLongestSetUndo. 
+
+" <Esc>			Abort completion, go back to what was typed. 
+"			In contrast to i_CTRL-E, this also erases the longest
+"			common string. 
+" Note: To implement the total abort of completion, all mappings that start a
+" completion must prepend <Plug>CompleteoptLongestSetUndo. 
+
+" <Esc>			Abort completion, go back to what was typed. 
+"			In contrast to i_CTRL-E, this also erases the longest
+"			common string. 
+" Note: To implement the total abort of completion, all mappings that start a
+" completion must prepend <Plug>CompleteoptLongestSetUndo. 
 
 " <Esc>			Abort completion, go back to what was typed. 
 "			In contrast to i_CTRL-E, this also erases the longest
