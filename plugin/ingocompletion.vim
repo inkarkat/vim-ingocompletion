@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	009	12-Jan-2010	Added missing <C-x><C-s> spell complete overload
+"				of <C-x>s. 
 "	008	13-Nov-2009	Added quick access accelerators 0-9 for the
 "				popup menu. 
 "	007	07-Aug-2009	BF: Always defining <Plug>UndoLongest, not just
@@ -165,6 +167,7 @@ if &completeopt =~# 'longest'
     inoremap <script> <C-x><C-u> <SID>CompleteoptLongestSetUndo<C-x><C-u><SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x><C-o> <SID>CompleteoptLongestSetUndo<C-x><C-o><SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x>s     <SID>CompleteoptLongestSetUndo<C-x>s<SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-s> <SID>CompleteoptLongestSetUndo<C-x><C-s><SID>CompleteoptLongestSelectNext
 
     " All completion mappings that allow repetition need a special mapping: To be
     " able to repeat, the match must have been inserted via CTRL-N/P, not just
