@@ -1,13 +1,17 @@
 " ingocompletion.vim: Customization of completions. 
 "
 " DEPENDENCIES:
-"
-" Copyright: (C) 2009 by Ingo Karkat
-"   The VIM LICENSE applies to this script; see ':help copyright'. 
+"   - Uses functions defined in ingospell.vim for |i_CTRL-X_CTRL-S|
+"     modifications. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	010	13-Jan-2010	|i_CTRL-X_CTRL-S| now consumes wrapper from
+"				ingospell.vim to allow use when spelling is
+"				disabled. The mapping must be in this script
+"				because :imap and <Plug> mappings somehow don't
+"				work properly. 
 "	009	12-Jan-2010	Added missing <C-x><C-s> spell complete overload
 "				of <C-x>s. 
 "	008	13-Nov-2009	Added quick access accelerators 0-9 for the
@@ -166,8 +170,16 @@ if &completeopt =~# 'longest'
     inoremap <script> <C-x><C-v> <SID>CompleteoptLongestSetUndo<C-x><C-v><SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x><C-u> <SID>CompleteoptLongestSetUndo<C-x><C-u><SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x><C-o> <SID>CompleteoptLongestSetUndo<C-x><C-o><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x>s     <SID>CompleteoptLongestSetUndo<C-x>s<SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-s> <SID>CompleteoptLongestSetUndo<C-x><C-s><SID>CompleteoptLongestSelectNext
+    " Integrate spell suggestion completion with ingospell.vim. 
+    " Note: This is done here, because somehow using :imap and
+    " <Plug>CompleteoptLongestSelectNext always inserts "Next" instead of
+    " showing the completion popup menu. 
+    "inoremap <script> <C-x>s     <SID>CompleteoptLongestSetUndo<C-x>s<SID>CompleteoptLongestSelectNext
+    "inoremap <script> <C-x><C-s> <SID>CompleteoptLongestSetUndo<C-x><C-s><SID>CompleteoptLongestSelectNext
+    inoremap <silent> <expr> <SID>SpellCompletePreWrapper SpellCompletePreWrapper()
+    inoremap <silent> <expr> <SID>SpellCompletePostWrapper SpellCompletePostWrapper()
+    inoremap <script> <C-x>s     <SID>CompleteoptLongestSetUndo<SID>SpellCompletePreWrapper<C-x>s<SID>SpellCompletePostWrapper<SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-s> <SID>CompleteoptLongestSetUndo<SID>SpellCompletePreWrapper<C-x><C-s><SID>SpellCompletePostWrapper<SID>CompleteoptLongestSelectNext
 
     " All completion mappings that allow repetition need a special mapping: To be
     " able to repeat, the match must have been inserted via CTRL-N/P, not just
