@@ -77,24 +77,6 @@ inoremap <expr> 7 pumvisible() ? '<PageDown><Up><Up><C-y>' : '7'
 "			common string. 
 " Note: To implement the total abort of completion, all mappings that start a
 " completion must prepend <Plug>CompleteoptLongestSetUndo. 
-
-" <Esc>			Abort completion, go back to what was typed. 
-"			In contrast to i_CTRL-E, this also erases the longest
-"			common string. 
-" Note: To implement the total abort of completion, all mappings that start a
-" completion must prepend <Plug>CompleteoptLongestSetUndo. 
-
-" <Esc>			Abort completion, go back to what was typed. 
-"			In contrast to i_CTRL-E, this also erases the longest
-"			common string. 
-" Note: To implement the total abort of completion, all mappings that start a
-" completion must prepend <Plug>CompleteoptLongestSetUndo. 
-
-" <Esc>			Abort completion, go back to what was typed. 
-"			In contrast to i_CTRL-E, this also erases the longest
-"			common string. 
-" Note: To implement the total abort of completion, all mappings that start a
-" completion must prepend <Plug>CompleteoptLongestSetUndo. 
 "
 " Set undo point to go back to what was typed when aborting completion. 
 function! s:SetUndo()
