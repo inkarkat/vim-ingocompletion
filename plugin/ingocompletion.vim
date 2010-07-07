@@ -119,6 +119,13 @@ if &completeopt =~# 'longest'
     " Note: :map-expr cannot be used here, it would be evaluated before the
     " preceding mapping that triggers the completion, thus pumvisible() would be
     " always false. 
+    " XXX: When canceling a long-running completion with CTRL-C, Vim only
+    " removes the very first pending key (<C-r>) from the typeahead buffer;
+    " thus, the text "=pumvisible() ? ..." will be literally inserted into the
+    " buffer. Once cannot work around this by using <C-r><C-r>=...; it'll insert
+    " the literal terminal code for <Up>/<Down> (something like "Xkd"). Any
+    " other intermediate no-op mapping will interfere with the (potentially
+    " opened) completion popup menu, too. 
     inoremap <Plug>CompleteoptLongestSelect     <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
     inoremap  <SID>CompleteoptLongestSelectNext <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
     inoremap  <SID>CompleteoptLongestSelectPrev <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
