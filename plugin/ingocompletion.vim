@@ -109,6 +109,29 @@ inoremap <script> <expr> <Esc>      pumvisible() ? '<C-e>' . <SID>UndoLongest() 
 
 
 
+"- inline completion without popup menu ---------------------------------------
+function! s:InlineComplete( completionKey )
+    if &completeopt !~# 'menu'
+	" The completion menu isn't enabled, anyway. 
+	" (Or the temporary disabling of the completion menu by this function
+	" hasn't been restored yet.) 
+	return a:completionKey
+    endif
+
+    let s:save_completeopt = &completeopt
+    set completeopt=
+    augroup InlineCompleteOff
+	autocmd!
+	autocmd BufLeave,WinLeave,InsertLeave,CursorMovedI <buffer> let &completeopt = s:save_completeopt | autocmd! InlineCompleteOff
+    augroup END
+
+    return a:completionKey
+endfunction
+inoremap <expr> <SID>InlineCompleteNext <SID>InlineComplete("\<lt>C-n>")
+inoremap <expr> <SID>InlineCompletePrev <SID>InlineComplete("\<lt>C-p>")
+
+
+
 "- complete longest + preselect -----------------------------------------------
 
 " Complete longest+preselect: On completion with multiple matches, insert the
