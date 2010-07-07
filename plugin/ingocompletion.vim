@@ -50,6 +50,8 @@ if exists('g:loaded_ingocompletion') || (v:version < 700)
 endif
 let g:loaded_ingocompletion = 1
 
+"- popup menu mappings and behavior -------------------------------------------
+
 " <Enter>		Accept the currently selected match and stop completion.
 "			Alias for i_CTRL-Y. 
 inoremap <expr> <CR> pumvisible() ? '<C-y>' : '<CR>'
@@ -71,6 +73,14 @@ inoremap <expr> 0 pumvisible() ? '<PageDown><Down><C-y>' : '0'
 inoremap <expr> 9 pumvisible() ? '<PageDown><C-y>' : '9'
 inoremap <expr> 8 pumvisible() ? '<PageDown><Up><C-y>' : '8'
 inoremap <expr> 7 pumvisible() ? '<PageDown><Up><Up><C-y>' : '7'
+
+" Aliases for |popupmenu-keys|:
+" CTRL-F		Use a match several entries further. This doesn't work
+"			in filename completion, where CTRL-F goes to the next
+"			matching filename. 
+" CTRL-B		Use a match several entries back. 
+inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>CompleteoptLongestSetUndo<C-x><C-f>'
+inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 
 " <Esc>			Abort completion, go back to what was typed. 
 "			In contrast to i_CTRL-E, this also erases the longest
@@ -97,6 +107,9 @@ function! s:UndoLongest()
 endfunction
 inoremap <script> <expr> <Esc>      pumvisible() ? '<C-e>' . <SID>UndoLongest() : '<Esc>'
 
+
+
+"- complete longest + preselect -----------------------------------------------
 
 " Complete longest+preselect: On completion with multiple matches, insert the
 " longest common text AND pre-select (but not yet insert) the first match. 
@@ -148,8 +161,8 @@ if &completeopt =~# 'longest'
     " completion. 
     " Note: These mappings are ignored in all <C-x><C-...> popups, they are only
     " active in <C-n>/<C-p>. 
-    inoremap <script> <expr> <C-n> pumvisible() ? '<C-n>' : '<SID>CompleteoptLongestSetUndo<C-n><SID>CompleteoptLongestSelectNext'
-    inoremap <script> <expr> <C-p> pumvisible() ? '<C-p>' : '<SID>CompleteoptLongestSetUndo<C-p><SID>CompleteoptLongestSelectPrev'
+    inoremap <script> <expr> <C-n> pumvisible() ? '<C-n>' : '<SID>InlineCompleteNext'
+    inoremap <script> <expr> <C-p> pumvisible() ? '<C-p>' : '<SID>InlineCompletePrev'
 
     " Install <Plug>CompleteoptLongestSelect for all built-in completion types.
     inoremap <script> <C-x><C-k> <SID>CompleteoptLongestSetUndo<C-x><C-k><SID>CompleteoptLongestSelectNext
@@ -190,18 +203,16 @@ else
 endif
 
 
+
+"- additional completion triggers ---------------------------------------------
+
 " Shorten some commonly used insert completions. 
 " CTRL-]		Tag completion |i_CTRL-X_CTRL-]|
 " CTRL-F		File name completion |i_CTRL-X_CTRL-F|
 "
-" Aliases for |popupmenu-keys|:
-" CTRL-F		Use a match several entries further. This doesn't work
-"			in filename completion, where CTRL-F goes to the next
-"			matching filename. 
-" CTRL-B		Use a match several entries back. 
 imap <C-]> <C-x><C-]>
-inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>CompleteoptLongestSetUndo<C-x><C-f>'
-inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
+" The CTRL-F mapping is included in the popupmenu overload above. 
+"imap <C-f> <C-x><C-f>
 
 
 " vimtip #1228, vimtip #1386: Completion popup selection like other IDEs. 
