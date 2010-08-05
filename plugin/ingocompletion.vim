@@ -7,6 +7,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	011	08-Jul-2010	Restructured some script fragments. 
+"				Added i_CTRL-N / i_CTRL-P Inline completion
+"				without popup menu. 
 "	010	13-Jan-2010	|i_CTRL-X_CTRL-S| now consumes wrapper from
 "				ingospell.vim to allow use when spelling is
 "				disabled. The mapping must be in this script
@@ -105,11 +108,26 @@ function! s:UndoLongest()
     endif
     return ''
 endfunction
-inoremap <script> <expr> <Esc>      pumvisible() ? '<C-e>' . <SID>UndoLongest() : '<Esc>'
+inoremap <script> <expr> <Esc>      pumvisible() ? '<C-e>' . <SID>UndoLongest() : <SID>InlineCompleteExit()
 
 
 
 "- inline completion without popup menu ---------------------------------------
+" i_CTRL-N / i_CTRL-P	Inline completion without popup menu: 
+" 	    		Find next/previous match for words that start with the
+"	    		keyword in front of the cursor, looking in places
+"			specified with the 'complete' option.
+"			The first match is inserted fully, key repeats will step
+"			through the completion matches without showing a menu.
+"			One can abort the completion and return to what was
+"			inserted beforehand via <Esc>. 
+function! s:RecordPosition()
+    " The position record consists of the current cursor position, the buffer
+    " number and its current change state. When this position record is assigned
+    " to a window-local variable, it is also linked to the current window and
+    " tab page. 
+    return getpos('.') + [bufnr(''), b:changedtick]
+endfunction 
 function! s:InlineComplete( completionKey )
     if &completeopt !~# 'menu'
 	" The completion menu isn't enabled, anyway. 
@@ -118,14 +136,49 @@ function! s:InlineComplete( completionKey )
 	return a:completionKey
     endif
 
+    " Clear the 'completeopt' setting so that no popup menu appears and the
+    " first match is inserted in its entirety. 
+    " The insertion of the match will trigger the autocmd that restores the
+    " original 'completeopt' setting for future completion requests. 
+    " We also store the position so that we can later check whether we're
+    " currently in an inline completion, as pumvisible() does when there's a
+    " completion with the popup menu. 
     let s:save_completeopt = &completeopt
     set completeopt=
     augroup InlineCompleteOff
 	autocmd!
-	autocmd BufLeave,WinLeave,InsertLeave,CursorMovedI <buffer> let &completeopt = s:save_completeopt | autocmd! InlineCompleteOff
+	autocmd BufLeave,WinLeave,InsertLeave,CursorMovedI <buffer> let &completeopt = s:save_completeopt | let w:IngoCompetion_InlineCompletePosition = s:RecordPosition() | autocmd! InlineCompleteOff
     augroup END
 
+    if ! s:IsInlineComplete()
+	" This is the start of an inline completion; set an undo point so that
+	" the completion can be canceled and the original text restored, like
+	" with CTRL-E in the popup menu. This needs some help from the mapping
+	" for <Esc> to work. 
+	call s:SetUndo()
+    endif
     return a:completionKey
+endfunction
+function! s:IsInlineComplete()
+    " This function clears the stored w:IngoCompetion_InlineCompletePosition, so
+    " that when an inline completion has no matches, the first <Esc> clears this
+    " flag and jumps out of the completion submode, and the second <Esc> then
+    " gets to exit from insert mode. Otherwise, each <Esc> would just repeat the
+    " s:UndoLongest() call and never get out of insert mode until the cursor
+    " moves away from that position.
+    " A consecutive CTRL-N at the same position will re-set the position through
+    " its autocmd, anyway. 
+    if exists('w:IngoCompetion_InlineCompletePosition')
+	if s:RecordPosition() == w:IngoCompetion_InlineCompletePosition
+	    unlet w:IngoCompetion_InlineCompletePosition
+	    return 1
+	endif
+	unlet w:IngoCompetion_InlineCompletePosition
+    endif
+    return 0
+endfunction
+function! s:InlineCompleteExit()
+    return (s:IsInlineComplete() ? s:UndoLongest() : "\<Esc>")
 endfunction
 inoremap <expr> <SID>InlineCompleteNext <SID>InlineComplete("\<lt>C-n>")
 inoremap <expr> <SID>InlineCompletePrev <SID>InlineComplete("\<lt>C-p>")
