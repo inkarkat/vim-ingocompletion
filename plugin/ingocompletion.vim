@@ -7,6 +7,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	013	24-Sep-2010	Added check via recorded undo point
+"				to <Esc> mapping so that a completion that does
+"				not prepend <Plug>CompleteoptLongestSetUndo
+"				(e.g. because it's not under my control) doesn't
+"				wreak havoc to the buffer. (This happened when
+"				aborting a fuf.vim search.) 
 "	012	06-Aug-2010	Retired <Esc> overload to abort Inline
 "				Completion, as it clashed with leaving insert
 "				mode. Instead, defining <C-E> and <C-Y> mappings
@@ -96,9 +102,21 @@ inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 "			common string. 
 " Note: To implement the total abort of completion, all mappings that start a
 " completion must prepend <Plug>CompleteoptLongestSetUndo. 
-"
+
+function! s:RecordUndoPoint( positionExpr )
+    " The undo point record consists of the position of a:positionExpr and the
+    " buffer number. When this position record is assigned to a window-local
+    " variable, it is also linked to the current window and tab page. 
+    return getpos(a:positionExpr) + [bufnr('')]
+endfunction 
 " Set undo point to go back to what was typed when aborting completion. 
 function! s:SetUndo()
+    " Separately record information about the undo point so that a completion
+    " that does not prepend <Plug>CompleteoptLongestSetUndo (e.g. because it's
+    " not under my control) doesn't wreak havoc to the buffer. (This happened
+    " when aborting a fuf.vim search.) 
+    let w:IngoCompetion_UndoPoint = s:RecordUndoPoint('.')
+
     call setpos("'\"", getpos('.'))
     return ''
 endfunction
@@ -109,8 +127,16 @@ endfunction
 inoremap <expr> <Plug>CompleteoptLongestSetUndo <SID>SetUndo()
 inoremap <expr> <SID>CompleteoptLongestSetUndo <SID>SetUndo()
 function! s:UndoLongest()
-    if line("'\"") == line('.') && col("'\"") < col('.')
-	return "\<C-\>\<C-o>dg`\""
+    " Only undo when the undo point is intact; i.e. the window, buffer and mark
+    " are still the same. 
+"****D echomsg '****' string(w:IngoCompetion_UndoPoint) string(s:RecordUndoPoint("'\""))
+    if exists('w:IngoCompetion_UndoPoint') && w:IngoCompetion_UndoPoint == s:RecordUndoPoint("'\"")
+	unlet w:IngoCompetion_UndoPoint
+	" After a completion, the line must be the same and the column must be
+	" larger than before. 
+	if line("'\"") == line('.') && col("'\"") < col('.')
+	    return "\<C-\>\<C-o>dg`\""
+	endif
     endif
     return ''
 endfunction
