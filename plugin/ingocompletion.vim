@@ -7,8 +7,14 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	012	06-Aug-2010	Retired <Esc> overload to abort Inline
+"				Completion, as it clashed with leaving insert
+"				mode. Instead, defining <C-E> and <C-Y> mappings
+"				like with the popup menu. The corresponding
+"				mappings to "Insert from Below / Above" have
+"				been moved from ingomappings.vim and augmented. 
 "	011	08-Jul-2010	Restructured some script fragments. 
-"				Added i_CTRL-N / i_CTRL-P Inline completion
+"				Added i_CTRL-N / i_CTRL-P Inline Completion
 "				without popup menu. 
 "	010	13-Jan-2010	|i_CTRL-X_CTRL-S| now consumes wrapper from
 "				ingospell.vim to allow use when spelling is
@@ -56,7 +62,7 @@ let g:loaded_ingocompletion = 1
 "- popup menu mappings and behavior -------------------------------------------
 
 " <Enter>		Accept the currently selected match and stop completion.
-"			Alias for i_CTRL-Y. 
+"			Alias for |i_CTRL-Y|. 
 inoremap <expr> <CR> pumvisible() ? '<C-y>' : '<CR>'
 
 "			Quick access accelerators for the popup menu: 
@@ -86,7 +92,7 @@ inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>Comp
 inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 
 " <Esc>			Abort completion, go back to what was typed. 
-"			In contrast to i_CTRL-E, this also erases the longest
+"			In contrast to |i_CTRL-E|, this also erases the longest
 "			common string. 
 " Note: To implement the total abort of completion, all mappings that start a
 " completion must prepend <Plug>CompleteoptLongestSetUndo. 
@@ -108,7 +114,7 @@ function! s:UndoLongest()
     endif
     return ''
 endfunction
-inoremap <script> <expr> <Esc>      pumvisible() ? '<C-e>' . <SID>UndoLongest() : <SID>InlineCompleteExit()
+inoremap <script> <expr> <Esc>      pumvisible() ? '<C-e>' . <SID>UndoLongest() : '<Esc>'
 
 
 
@@ -119,8 +125,6 @@ inoremap <script> <expr> <Esc>      pumvisible() ? '<C-e>' . <SID>UndoLongest() 
 "			specified with the 'complete' option.
 "			The first match is inserted fully, key repeats will step
 "			through the completion matches without showing a menu.
-"			One can abort the completion and return to what was
-"			inserted beforehand via <Esc>. 
 function! s:RecordPosition()
     " The position record consists of the current cursor position, the buffer
     " number and its current change state. When this position record is assigned
@@ -128,6 +132,24 @@ function! s:RecordPosition()
     " tab page. 
     return getpos('.') + [bufnr(''), b:changedtick]
 endfunction 
+function! s:IsInlineComplete()
+    " This function clears the stored w:IngoCompetion_InlineCompletePosition, so
+    " that when an inline completion has no matches, the first <Esc> clears this
+    " flag and jumps out of the completion submode, and the second <Esc> then
+    " gets to exit from insert mode. Otherwise, each <Esc> would just repeat the
+    " s:UndoLongest() call and never get out of insert mode until the cursor
+    " moves away from that position.
+    " A consecutive CTRL-N at the same position will re-set the position through
+    " its autocmd, anyway. 
+    if exists('w:IngoCompetion_InlineCompletePosition')
+	if s:RecordPosition() == w:IngoCompetion_InlineCompletePosition
+	    unlet w:IngoCompetion_InlineCompletePosition
+	    return 1
+	endif
+	unlet w:IngoCompetion_InlineCompletePosition
+    endif
+    return 0
+endfunction
 function! s:InlineComplete( completionKey )
     if &completeopt !~# 'menu'
 	" The completion menu isn't enabled, anyway. 
@@ -159,29 +181,22 @@ function! s:InlineComplete( completionKey )
     endif
     return a:completionKey
 endfunction
-function! s:IsInlineComplete()
-    " This function clears the stored w:IngoCompetion_InlineCompletePosition, so
-    " that when an inline completion has no matches, the first <Esc> clears this
-    " flag and jumps out of the completion submode, and the second <Esc> then
-    " gets to exit from insert mode. Otherwise, each <Esc> would just repeat the
-    " s:UndoLongest() call and never get out of insert mode until the cursor
-    " moves away from that position.
-    " A consecutive CTRL-N at the same position will re-set the position through
-    " its autocmd, anyway. 
-    if exists('w:IngoCompetion_InlineCompletePosition')
-	if s:RecordPosition() == w:IngoCompetion_InlineCompletePosition
-	    unlet w:IngoCompetion_InlineCompletePosition
-	    return 1
-	endif
-	unlet w:IngoCompetion_InlineCompletePosition
-    endif
-    return 0
-endfunction
-function! s:InlineCompleteExit()
-    return (s:IsInlineComplete() ? s:UndoLongest() : "\<Esc>")
-endfunction
 inoremap <expr> <SID>InlineCompleteNext <SID>InlineComplete("\<lt>C-n>")
 inoremap <expr> <SID>InlineCompletePrev <SID>InlineComplete("\<lt>C-p>")
+
+"			One can abort the completion and return to what was
+"			inserted beforehand via <C-E>, or accept the currently
+"			selected match and stop completion with <C-Y>.  
+"			It is not possible to abort via <Esc>, because that
+"			would clash with stopping insertion at all; i.e. it
+"			would then not be possible to exit insert mode after an
+"			inline completion without typing and removing an
+"			additional character. 
+"imap <expr> <C-E> pumvisible() ? '<C-E>' : <SID>IsInlineComplete() ? <SID>UndoLongest() : '<C-E>'
+"imap <expr> <C-Y> pumvisible() ? '<C-Y>' : <SID>IsInlineComplete() ? ' <BS>' : '<C-Y>'
+" This is overloaded with "Insert from Below / Above", cp. ingomappings.vim. 
+imap <expr> <C-E> pumvisible() ? '<C-E>' : <SID>IsInlineComplete() ? <SID>UndoLongest() : '<Plug>InsertFromBelow'
+imap <expr> <C-Y> pumvisible() ? '<C-Y>' : <SID>IsInlineComplete() ? ' <BS>' : '<Plug>InsertFromAbove'
 
 
 
