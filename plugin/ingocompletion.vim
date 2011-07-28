@@ -7,6 +7,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	014	29-Jul-2011	ENH: Another <Tab> after accepting a completion
+"				candidate with <CR> in the popup menu or <C-Y>
+"				in inline completion will continue completion
+"				with the next word instead of restarting the
+"				completion. 
 "	013	24-Sep-2010	Added check via recorded undo point
 "				to <Esc> mapping so that a completion that does
 "				not prepend <Plug>CompleteoptLongestSetUndo
@@ -70,7 +75,10 @@ let g:loaded_ingocompletion = 1
 
 " <Enter>		Accept the currently selected match and stop completion.
 "			Alias for |i_CTRL-Y|. 
-inoremap <expr> <CR> pumvisible() ? '<C-y>' : '<CR>'
+"			Another <Tab> will continue completion with the next
+"			word instead of restarting the completion; if you don't
+"			want this, use |i_CTRL-Y| instead. 
+inoremap <expr> <CR> pumvisible() ? '<C-y><C-\><C-o>:call ingosupertab#Completed()<CR>' : '<CR>'
 
 "			Quick access accelerators for the popup menu: 
 " 1-6			In the popup menu: Accept the first, second, ... visible
@@ -223,11 +231,12 @@ inoremap <expr> <SID>InlineCompletePrev <SID>InlineComplete("\<lt>C-p>")
 "			would then not be possible to exit insert mode after an
 "			inline completion without typing and removing an
 "			additional character. 
-"imap <expr> <C-E> pumvisible() ? '<C-E>' : <SID>IsInlineComplete() ? <SID>UndoLongest() : '<C-E>'
-"imap <expr> <C-Y> pumvisible() ? '<C-Y>' : <SID>IsInlineComplete() ? ' <BS>' : '<C-Y>'
+inoremap <expr> <SID>CompletedCall ingosupertab#Completed()
+"imap <expr> <C-E> pumvisible() ? '<C-E>' : <SID>IsInlineComplete() ? <SID>UndoLongest()        : '<C-E>'
+"imap <expr> <C-Y> pumvisible() ? '<C-Y>' : <SID>IsInlineComplete() ? ' <BS><SID>CompletedCall' : '<C-Y>'
 " This is overloaded with "Insert from Below / Above", cp. ingomappings.vim. 
-imap <expr> <C-E> pumvisible() ? '<C-E>' : <SID>IsInlineComplete() ? <SID>UndoLongest() : '<Plug>InsertFromBelow'
-imap <expr> <C-Y> pumvisible() ? '<C-Y>' : <SID>IsInlineComplete() ? ' <BS>' : '<Plug>InsertFromAbove'
+imap <expr> <C-E> pumvisible() ? '<C-E>' : <SID>IsInlineComplete() ? <SID>UndoLongest()        : '<Plug>InsertFromBelow'
+imap <expr> <C-Y> pumvisible() ? '<C-Y>' : <SID>IsInlineComplete() ? ' <BS><SID>CompletedCall' : '<Plug>InsertFromAbove'
 
 
 
