@@ -13,6 +13,7 @@
 "				(e.g. because it's not under my control) doesn't
 "				wreak havoc to the buffer. (This happened when
 "				aborting a fuf.vim search.) 
+"				FIX: The '" mark can only be set since Vim 7.2. 
 "	012	06-Aug-2010	Retired <Esc> overload to abort Inline
 "				Completion, as it clashed with leaving insert
 "				mode. Instead, defining <C-E> and <C-Y> mappings
@@ -110,6 +111,10 @@ function! s:RecordUndoPoint( positionExpr )
     return getpos(a:positionExpr) + [bufnr('')]
 endfunction 
 " Set undo point to go back to what was typed when aborting completion. 
+"
+" Setting of mark '" is only supported since Vim 7.2; use last jump mark ''
+" for Vim 7.1. 
+let s:IngoCompletion_UndoMark = (v:version < 702 ? "'" : '"')
 function! s:SetUndo()
     " Separately record information about the undo point so that a completion
     " that does not prepend <Plug>CompleteoptLongestSetUndo (e.g. because it's
@@ -117,7 +122,7 @@ function! s:SetUndo()
     " when aborting a fuf.vim search.) 
     let w:IngoCompetion_UndoPoint = s:RecordUndoPoint('.')
 
-    call setpos("'\"", getpos('.'))
+    call setpos("'" . s:IngoCompletion_UndoMark, getpos('.'))
     return ''
 endfunction
 " Note: By using a :map-expr that doesn't return anything and setting the
@@ -130,12 +135,12 @@ function! s:UndoLongest()
     " Only undo when the undo point is intact; i.e. the window, buffer and mark
     " are still the same. 
 "****D echomsg '****' string(w:IngoCompetion_UndoPoint) string(s:RecordUndoPoint("'\""))
-    if exists('w:IngoCompetion_UndoPoint') && w:IngoCompetion_UndoPoint == s:RecordUndoPoint("'\"")
+    if exists('w:IngoCompetion_UndoPoint') && w:IngoCompetion_UndoPoint == s:RecordUndoPoint("'" . s:IngoCompletion_UndoMark)
 	unlet w:IngoCompetion_UndoPoint
 	" After a completion, the line must be the same and the column must be
 	" larger than before. 
-	if line("'\"") == line('.') && col("'\"") < col('.')
-	    return "\<C-\>\<C-o>dg`\""
+	if line("'" . s:IngoCompletion_UndoMark) == line('.') && col("'" . s:IngoCompletion_UndoMark) < col('.')
+	    return "\<C-\>\<C-o>dg`" . s:IngoCompletion_UndoMark
 	endif
     endif
     return ''
