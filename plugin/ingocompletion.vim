@@ -7,6 +7,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	016	21-Sep-2011	Avoid use of s:function() by using autoload
+"				function name.
 "	015	29-Jul-2011	BUG: Choosing completion candidate via 0-9 quick
 "				access accelerators does not work for backwards
 "				completion (like <C-X><C-P>, <Tab> from
@@ -281,19 +283,15 @@ if &completeopt =~# 'longest'
     inoremap  <SID>CompleteoptLongestSelectNext <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
     inoremap  <SID>CompleteoptLongestSelectPrev <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
     " Integration into ingosupertab.vim. 
-    function! s:Complete()
+    function! ingocompletion#Complete()
 	call s:SetUndo()
 	return "\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>"
     endfunction
-    function! s:ContinueComplete()
+    function! ingocompletion#ContinueComplete()
 	return (pumvisible() ? "\<Down>\<C-p>\<C-x>\<C-p>" : "\<C-x>\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>")
     endfunction
-    function! s:function(name)
-	return function(substitute(a:name,'^s:',matchstr(expand('<sfile>'), '<SNR>\d\+_'),''))
-    endfunction
-    let g:IngoSuperTab_complete = s:function('s:Complete')
-    let g:IngoSuperTab_continueComplete = s:function('s:ContinueComplete')
-    delfunction s:function
+    let g:IngoSuperTab_complete = function('ingocompletion#Complete')
+    let g:IngoSuperTab_continueComplete = function('ingocompletion#ContinueComplete')
 
     " Install <Plug>CompleteoptLongestSelect for the built-in generic
     " completion. 
