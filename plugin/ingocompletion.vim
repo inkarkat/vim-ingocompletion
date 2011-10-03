@@ -7,6 +7,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	017	30-Sep-2011	Avoid showing internal commands and expressions
+"				by using <silent>. 
 "	016	21-Sep-2011	Avoid use of s:function() by using autoload
 "				function name.
 "	015	29-Jul-2011	BUG: Choosing completion candidate via 0-9 quick
@@ -84,7 +86,7 @@ let g:loaded_ingocompletion = 1
 "			Another <Tab> will continue completion with the next
 "			word instead of restarting the completion; if you don't
 "			want this, use |i_CTRL-Y| instead. 
-inoremap <expr> <CR> pumvisible() ? '<C-y><C-\><C-o>:call ingosupertab#Completed()<CR>' : '<CR>'
+inoremap <silent> <expr> <CR> pumvisible() ? '<C-y><C-\><C-o>:call ingosupertab#Completed()<CR>' : '<CR>'
 
 "			Quick access accelerators for the popup menu: 
 " 1-6			In the popup menu: Accept the first, second, ... visible
@@ -279,9 +281,9 @@ if &completeopt =~# 'longest'
     " the literal terminal code for <Up>/<Down> (something like "Xkd"). Any
     " other intermediate no-op mapping will interfere with the (potentially
     " opened) completion popup menu, too. 
-    inoremap <Plug>CompleteoptLongestSelect     <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
-    inoremap  <SID>CompleteoptLongestSelectNext <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
-    inoremap  <SID>CompleteoptLongestSelectPrev <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
+    inoremap <silent> <Plug>CompleteoptLongestSelect     <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
+    inoremap <silent>  <SID>CompleteoptLongestSelectNext <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
+    inoremap <silent>  <SID>CompleteoptLongestSelectPrev <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
     " Integration into ingosupertab.vim. 
     function! ingocompletion#Complete()
 	call s:SetUndo()
@@ -333,9 +335,9 @@ else
     " Custom completion types are enhanced by defining custom mappings to the
     " <Plug>...Completion mappings in 00ingoplugin.vim. This is also defined
     " when the "longest" option isn't set, so that no check is necessary there. 
-    inoremap <Plug>CompleteoptLongestSelect <Nop>
-    inoremap <SID>CompleteoptLongestSelectNext <Nop>
-    inoremap <SID>CompleteoptLongestSelectPrev <Nop>
+    inoremap <silent> <Plug>CompleteoptLongestSelect <Nop>
+    inoremap <silent> <SID>CompleteoptLongestSelectNext <Nop>
+    inoremap <silent> <SID>CompleteoptLongestSelectPrev <Nop>
 endif
 
 
