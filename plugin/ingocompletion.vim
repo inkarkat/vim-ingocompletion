@@ -7,6 +7,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	019	05-Oct-2011	Implement check before substitution and cursor
+"				column correction in multi-line completion fix. 
+"	018	04-Oct-2011	Add fix for multi-line completion problem. 
 "	017	30-Sep-2011	Avoid showing internal commands and expressions
 "				by using <silent>. 
 "	016	21-Sep-2011	Avoid use of s:function() by using autoload
@@ -81,12 +84,52 @@ let g:loaded_ingocompletion = 1
 
 "- popup menu mappings and behavior -------------------------------------------
 
+"			Fix the multi-line completion problem. 
+"			Currently, completion matches are inserted literally,
+"			with newlines represented by ^@. Vim should expand this
+"			into proper newlines. We work around this via an autocmd
+"			that fires once after completion (the CursorMovedI event
+"			is not fired during completion with the popup menu), and
+"			by hooking into the <CR> key. (<C-Y> apparently works
+"			even without this.) 
+"			(FIXME: It seems to be fired once after the initial
+"			completion trigger with empty 'completeopt'.) 
+"			Usage: All CTRL-X_... completion mappings that may
+"			return multi-line matches must append
+"			<Plug>(CompleteMultilineFixSetup) to get this fix. 
+function! s:CompleteMultilineFix()
+    let l:textBeforeCursor = strpart(getline('.'), 0, col('.') - 1)
+    let l:lastNewlineCol = strridx(l:textBeforeCursor, "\n")
+    if l:lastNewlineCol == -1
+	" Nothing to do. 
+	return ''
+    endif
+
+    execute "substitute/\n/\\r/ge"
+
+    " The substitute command positions the cursor at the first column of the
+    " last line inserted. This is fine when the completion ended with a newline,
+    " but needs correction when an incomplete last line has been inserted. 
+    call cursor(line('.'), len(l:textBeforeCursor) - l:lastNewlineCol)
+    return ''
+endfunction
+function! s:CompleteMultilineFixSetup()
+    augroup CompleteMultilineFix
+	autocmd!
+	autocmd CursorMovedI * call <SID>CompleteMultilineFix() | autocmd! CompleteMultilineFix
+    augroup END
+
+    return ''
+endfunction
+inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup()
+inoremap <silent> <SID>(CompleteMultilineFix) <C-\><C-o>:call <SID>CompleteMultilineFix()<CR>
+
 " <Enter>		Accept the currently selected match and stop completion.
 "			Alias for |i_CTRL-Y|. 
 "			Another <Tab> will continue completion with the next
 "			word instead of restarting the completion; if you don't
 "			want this, use |i_CTRL-Y| instead. 
-inoremap <silent> <expr> <CR> pumvisible() ? '<C-y><C-\><C-o>:call ingosupertab#Completed()<CR>' : '<CR>'
+inoremap <silent> <script> <expr> <CR> (pumvisible() ? '<C-y><C-\><C-o>:call ingosupertab#Completed()<CR>' : '<CR>') . '<SID>(CompleteMultilineFix)'
 
 "			Quick access accelerators for the popup menu: 
 " 1-6			In the popup menu: Accept the first, second, ... visible
