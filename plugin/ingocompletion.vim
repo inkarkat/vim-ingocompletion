@@ -7,6 +7,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	020	09-Oct-2011	imap <CR>: Use i_CTRL-R instead of
+"				i_CTRL-\_CTRL-O to invoke the calls to
+"				ingosupertab and the multi-line fix. The leave
+"				of insert mode made my CompleteHelper#Repeat#...
+"				not repeating when accepting a completion popup
+"				match via <CR>, because the run-once autocmds
+"				somehow didn't run. 
 "	019	05-Oct-2011	Implement check before substitution and cursor
 "				column correction in multi-line completion fix. 
 "				BUG: Must only add the multi-line completion fix
@@ -132,7 +139,7 @@ inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup
 "			Another <Tab> will continue completion with the next
 "			word instead of restarting the completion; if you don't
 "			want this, use |i_CTRL-Y| instead. 
-inoremap <silent> <script> <expr> <CR> pumvisible() ? '<C-y><C-\><C-o>:call ingosupertab#Completed()<Bar>call <SID>CompleteMultilineFix()<CR>' : '<CR>'
+inoremap <silent> <script> <expr> <CR> pumvisible() ? '<C-y><C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR>' : '<CR>'
 
 "			Quick access accelerators for the popup menu: 
 " 1-6			In the popup menu: Accept the first, second, ... visible
