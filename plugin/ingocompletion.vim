@@ -9,6 +9,10 @@
 " REVISION	DATE		REMARKS 
 "	019	05-Oct-2011	Implement check before substitution and cursor
 "				column correction in multi-line completion fix. 
+"				BUG: Must only add the multi-line completion fix
+"				to the pumvisible()-branch of <CR>; doing this
+"				now directly in the ex command-line without
+"				another <SID>-mapping. 
 "	018	04-Oct-2011	Add fix for multi-line completion problem. 
 "	017	30-Sep-2011	Avoid showing internal commands and expressions
 "				by using <silent>. 
@@ -122,14 +126,13 @@ function! s:CompleteMultilineFixSetup()
     return ''
 endfunction
 inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup()
-inoremap <silent> <SID>(CompleteMultilineFix) <C-\><C-o>:call <SID>CompleteMultilineFix()<CR>
 
 " <Enter>		Accept the currently selected match and stop completion.
 "			Alias for |i_CTRL-Y|. 
 "			Another <Tab> will continue completion with the next
 "			word instead of restarting the completion; if you don't
 "			want this, use |i_CTRL-Y| instead. 
-inoremap <silent> <script> <expr> <CR> (pumvisible() ? '<C-y><C-\><C-o>:call ingosupertab#Completed()<CR>' : '<CR>') . '<SID>(CompleteMultilineFix)'
+inoremap <silent> <script> <expr> <CR> pumvisible() ? '<C-y><C-\><C-o>:call ingosupertab#Completed()<Bar>call <SID>CompleteMultilineFix()<CR>' : '<CR>'
 
 "			Quick access accelerators for the popup menu: 
 " 1-6			In the popup menu: Accept the first, second, ... visible
