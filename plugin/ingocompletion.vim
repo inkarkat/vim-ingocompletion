@@ -14,6 +14,11 @@
 "				not repeating when accepting a completion popup
 "				match via <CR>, because the run-once autocmds
 "				somehow didn't run. 
+"				Make multi-line completion fix support repeat
+"				functionality of CompleteHelper.vim: After
+"				expansion of newlines, the repeat record must be
+"				updated so that a repeat of completion is
+"				detected correctly. 
 "	019	05-Oct-2011	Implement check before substitution and cursor
 "				column correction in multi-line completion fix. 
 "				BUG: Must only add the multi-line completion fix
@@ -122,6 +127,10 @@ function! s:CompleteMultilineFix()
     " last line inserted. This is fine when the completion ended with a newline,
     " but needs correction when an incomplete last line has been inserted. 
     call cursor(line('.'), len(l:textBeforeCursor) - l:lastNewlineCol)
+
+    " Integration into CompleteHelper.vim. 
+    call CompleteHelper#Repeat#SetRecord()
+
     return ''
 endfunction
 function! s:CompleteMultilineFixSetup()
