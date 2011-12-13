@@ -151,7 +151,19 @@ function! s:CompleteMultilineFixSetup()
 endfunction
 inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup()
 
+function! s:CompleteThesaurusPrep()
+    " The thesaurus completion treats all non-keyword characters as delimiters.
+    " Make almost everything a keyword character to be able to include ['"] in
+    " thesaurus words, and only have real whitespace as delimiters. 
+    let s:save_iskeyword = &l:iskeyword
+    setlocal iskeyword=@,33-255
+    return ''
+endfunction
+inoremap <expr> <SID>(CompleteThesaurusPrep) <SID>CompleteThesaurusPrep()
 function! s:CompleteThesaurusFix()
+    let &l:iskeyword = s:save_iskeyword
+
+
     let l:save_pos = getpos('.')
     let l:textBeforeCursor = strpart(getline('.'), 0, col('.') - 1)
 
@@ -416,7 +428,7 @@ if &completeopt =~# 'longest'
 
     " Install <Plug>CompleteoptLongestSelect for all built-in completion types.
     inoremap <script> <C-x><C-k> <SID>CompleteoptLongestSetUndo<C-x><C-k><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-t> <SID>CompleteoptLongestSetUndo<C-x><C-t><SID>(CompleteThesaurusFixSetup)<SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-t> <SID>CompleteoptLongestSetUndo<SID>(CompleteThesaurusPrep)<C-x><C-t><SID>(CompleteThesaurusFixSetup)<SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x><C-]> <SID>CompleteoptLongestSetUndo<C-x><C-]><SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x><C-f> <SID>CompleteoptLongestSetUndo<C-x><C-f><SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x><C-v> <SID>CompleteoptLongestSetUndo<C-x><C-v><SID>CompleteoptLongestSelectNext
