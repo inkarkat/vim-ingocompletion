@@ -7,6 +7,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	021	14-Dec-2011	Work around thesaurus completion's limitation of
+"				treating all whitespace and non-keyword
+"				characters as delimiters and enable insertion of
+"				newlines via symbol workarounds. 
 "	020	09-Oct-2011	imap <CR>: Use i_CTRL-R instead of
 "				i_CTRL-\_CTRL-O to invoke the calls to
 "				ingosupertab and the multi-line fix. The leave
@@ -121,6 +125,10 @@ function! s:CompleteMultilineFix()
 	return ''
     endif
 
+    if strridx(l:textBeforeCursor, nr2char(160)) != -1
+	substitute/\%d160/ /ge
+    endif
+
     execute "substitute/\n/\\r/ge"
 
     " The substitute command positions the cursor at the first column of the
@@ -142,6 +150,48 @@ function! s:CompleteMultilineFixSetup()
     return ''
 endfunction
 inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup()
+
+function! s:CompleteThesaurusFix()
+    let l:save_pos = getpos('.')
+    let l:textBeforeCursor = strpart(getline('.'), 0, col('.') - 1)
+
+    " Convert non-breaking spaces (needed to overcome the thesaurus limitation
+    " of treating whitespace as delimiters) to spaces. 
+    if strridx(l:textBeforeCursor, nr2char(160)) != -1
+	substitute/\%d160/ /ge
+
+	" The substitution positions the cursor in column 1; undo that. 
+	call setpos('.', l:save_pos)
+    endif
+
+    " Convert newline symbox to actual newline. 
+    let l:lastNewlineCol = strridx(l:textBeforeCursor, nr2char(182))
+    if l:lastNewlineCol == -1
+	" Nothing to do. 
+	return ''
+    endif
+
+    substitute/\%d182/\r/ge
+
+    " The substitute command positions the cursor at the first column of the
+    " last line inserted. This is fine when the completion ended with a newline,
+    " but needs correction when an incomplete last line has been inserted. 
+    call cursor(line('.'), len(l:textBeforeCursor) - l:lastNewlineCol)
+
+    " Integration into CompleteHelper.vim. 
+    call CompleteHelper#Repeat#SetRecord()
+
+    return ''
+endfunction
+function! s:CompleteThesaurusFixSetup()
+    augroup CompleteThesaurusFix
+	autocmd!
+	autocmd CursorMovedI * call <SID>CompleteThesaurusFix() | autocmd! CompleteThesaurusFix
+    augroup END
+
+    return ''
+endfunction
+inoremap <expr> <SID>(CompleteThesaurusFixSetup) <SID>CompleteThesaurusFixSetup()
 
 " <Enter>		Accept the currently selected match and stop completion.
 "			Alias for |i_CTRL-Y|. 
@@ -366,7 +416,7 @@ if &completeopt =~# 'longest'
 
     " Install <Plug>CompleteoptLongestSelect for all built-in completion types.
     inoremap <script> <C-x><C-k> <SID>CompleteoptLongestSetUndo<C-x><C-k><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-t> <SID>CompleteoptLongestSetUndo<C-x><C-t><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-t> <SID>CompleteoptLongestSetUndo<C-x><C-t><SID>(CompleteThesaurusFixSetup)<SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x><C-]> <SID>CompleteoptLongestSetUndo<C-x><C-]><SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x><C-f> <SID>CompleteoptLongestSetUndo<C-x><C-f><SID>CompleteoptLongestSelectNext
     inoremap <script> <C-x><C-v> <SID>CompleteoptLongestSetUndo<C-x><C-v><SID>CompleteoptLongestSelectNext
