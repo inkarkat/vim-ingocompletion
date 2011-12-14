@@ -155,6 +155,8 @@ function! s:CompleteThesaurusPrep()
     " The thesaurus completion treats all non-keyword characters as delimiters.
     " Make almost everything a keyword character to be able to include ['"] in
     " thesaurus words, and only have real whitespace as delimiters. 
+    " Note that this has the side effect of only allowing completion from
+    " whitespace-separated completion bases. 
     let s:save_iskeyword = &l:iskeyword
     setlocal iskeyword=@,33-255
     return ''
