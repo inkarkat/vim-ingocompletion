@@ -7,7 +7,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
-"	021	14-Dec-2011	Work around thesaurus completion's limitation of
+"	021	15-Dec-2011	Work around thesaurus completion's limitation of
 "				treating all whitespace and non-keyword
 "				characters as delimiters and enable insertion of
 "				newlines via symbol workarounds. 
@@ -153,12 +153,13 @@ inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup
 
 function! s:CompleteThesaurusPrep()
     " The thesaurus completion treats all non-keyword characters as delimiters.
-    " Make almost everything a keyword character to be able to include ['"] in
-    " thesaurus words, and only have real whitespace as delimiters. 
+    " Make almost everything (except the desired delimiter <Tab>) a keyword
+    " character to be able to include spaces and ['"] in thesaurus words, and
+    " only have real whitespace as delimiters. 
     " Note that this has the side effect of only allowing completion from
     " whitespace-separated completion bases. 
     let s:save_iskeyword = &l:iskeyword
-    setlocal iskeyword=@,33-255
+    setlocal iskeyword=@,32-255
     return ''
 endfunction
 inoremap <expr> <SID>(CompleteThesaurusPrep) <SID>CompleteThesaurusPrep()
@@ -169,16 +170,7 @@ function! s:CompleteThesaurusFix()
     let l:save_pos = getpos('.')
     let l:textBeforeCursor = strpart(getline('.'), 0, col('.') - 1)
 
-    " Convert non-breaking spaces (needed to overcome the thesaurus limitation
-    " of treating whitespace as delimiters) to spaces. 
-    if strridx(l:textBeforeCursor, nr2char(160)) != -1
-	substitute/\%d160/ /ge
-
-	" The substitution positions the cursor in column 1; undo that. 
-	call setpos('.', l:save_pos)
-    endif
-
-    " Convert newline symbox to actual newline. 
+    " Convert newline symbol to actual newline. 
     let l:lastNewlineCol = strridx(l:textBeforeCursor, nr2char(182))
     if l:lastNewlineCol == -1
 	" Nothing to do. 
