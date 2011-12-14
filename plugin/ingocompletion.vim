@@ -151,7 +151,31 @@ function! s:CompleteMultilineFixSetup()
 endfunction
 inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup()
 
+function! CompleteThesaurusMod( col )
+    let l:cursorCol = col('.')
+
+    let l:line = getline('.')
+    let l:line = strpart(l:line, 0, a:col) . ' ' . strpart(l:line, a:col)
+    call setline('.', l:line)
+
+    call cursor(line('.'), l:cursorCol + 1)
+    return ''
+endfunction
 function! s:CompleteThesaurusPrep()
+    let l:modifier = ''
+
+    " Locate the start of the keyword. 
+    if col('.') > 1 && searchpos(' \k*\%#', 'bn', line('.')) == [0, 0]
+	" There's a non-Space non-keyword character in front of the completion
+	" base. We need to temporarily insert a Space character, or the search
+	" for completions with the modified 'iskeyword' will fail. 
+	let l:keywordStartCol = searchpos('\k*\%#', 'bn', line('.'))[1]
+	if l:keywordStartCol == 0
+	    let l:keywordStartCol = col('.')
+	endif
+	let l:modifier = "\<C-r>\<C-r>=CompleteThesaurusMod(" . (l:keywordStartCol - 1) . ")\<CR>"
+    endif 
+    
     " The thesaurus completion treats all non-keyword characters as delimiters.
     " Make almost everything (except the desired delimiter <Tab>) a keyword
     " character to be able to include spaces and ['"] in thesaurus words, and
@@ -160,7 +184,7 @@ function! s:CompleteThesaurusPrep()
     " whitespace-separated completion bases. 
     let s:save_iskeyword = &l:iskeyword
     setlocal iskeyword=@,32-255
-    return ''
+    return l:modifier
 endfunction
 inoremap <expr> <SID>(CompleteThesaurusPrep) <SID>CompleteThesaurusPrep()
 function! s:CompleteThesaurusFix()
