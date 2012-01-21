@@ -7,6 +7,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	022	22-Jan-2012	Add <SID>CompleteStopInsert() hook to <CR> for
+"				BidiComplete's immediate leave of insert mode. 
 "	021	15-Dec-2011	Work around thesaurus completion's limitation of
 "				treating all whitespace and non-keyword
 "				characters as delimiters. Limit the delimites to
@@ -241,7 +243,17 @@ inoremap <expr> <SID>(CompleteThesaurusFixSetup) <SID>CompleteThesaurusFixSetup(
 "			Another <Tab> will continue completion with the next
 "			word instead of restarting the completion; if you don't
 "			want this, use |i_CTRL-Y| instead. 
-inoremap <silent> <script> <expr> <CR> pumvisible() ? '<C-y><C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR>' : '<CR>'
+function! s:CompleteStopInsert()
+    " This hook can be used by completion functions to immediately leave insert
+    " mode after a completion match was chosen. Used by BidiComplete. 
+    if exists('g:CompleteStopInsert')
+	unlet g:CompleteStopInsert
+	return "\<Esc>"
+    else
+	return ''
+    endif
+endfunction
+inoremap <silent> <script> <expr> <CR> pumvisible() ? '<C-y><C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR><C-r>=<SID>CompleteStopInsert()<CR>' : '<CR>'
 
 "			Quick access accelerators for the popup menu: 
 " 1-6			In the popup menu: Accept the first, second, ... visible
