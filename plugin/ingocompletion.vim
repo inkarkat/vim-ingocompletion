@@ -9,8 +9,10 @@
 " REVISION	DATE		REMARKS 
 "	021	15-Dec-2011	Work around thesaurus completion's limitation of
 "				treating all whitespace and non-keyword
-"				characters as delimiters and enable insertion of
-"				newlines via symbol workarounds. 
+"				characters as delimiters. Limit the delimites to
+"				lower-ASCII unprintable characters and (mainly)
+"				<Tab>. Enable insertion of newlines via symbol
+"				workarounds. 
 "	020	09-Oct-2011	imap <CR>: Use i_CTRL-R instead of
 "				i_CTRL-\_CTRL-O to invoke the calls to
 "				ingosupertab and the multi-line fix. The leave
@@ -152,47 +154,58 @@ endfunction
 inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup()
 
 function! CompleteThesaurusMod( col )
+    " Insert the temporary Unit Separator in position a:col, and adapt the
+    " cursor position. 
     let l:cursorCol = col('.')
-
-    let l:line = getline('.')
-    let l:line = strpart(l:line, 0, a:col) . ' ' . strpart(l:line, a:col)
-    call setline('.', l:line)
-
+	let l:line = getline('.')
+	let l:modline = strpart(l:line, 0, a:col) . nr2char(31) . strpart(l:line, a:col)
+	call setline('.', l:modline)
     call cursor(line('.'), l:cursorCol + 1)
     return ''
 endfunction
 function! s:CompleteThesaurusPrep()
     let l:modifier = ''
 
-    " Locate the start of the keyword. 
-    if col('.') > 1 && searchpos(' \k*\%#', 'bn', line('.')) == [0, 0]
-	" There's a non-Space non-keyword character in front of the completion
-	" base. We need to temporarily insert a Space character, or the search
-	" for completions with the modified 'iskeyword' will fail. 
+    if col('.') > 1 " Unless we're at the beginning of a line ... 
+	" We need to temporarily insert an non-(extended) keyword character
+	" (let's take the rare ASCII 31 = Unit Separator), or the search for
+	" completions with the extended 'iskeyword' will fail. 
 	let l:keywordStartCol = searchpos('\k*\%#', 'bn', line('.'))[1]
 	if l:keywordStartCol == 0
 	    let l:keywordStartCol = col('.')
 	endif
+	" Cannot directly modify inside map-<expr>. 
 	let l:modifier = "\<C-r>\<C-r>=CompleteThesaurusMod(" . (l:keywordStartCol - 1) . ")\<CR>"
     endif 
     
     " The thesaurus completion treats all non-keyword characters as delimiters.
-    " Make almost everything (except the desired delimiter <Tab>) a keyword
-    " character to be able to include spaces and ['"] in thesaurus words, and
-    " only have real whitespace as delimiters. 
+    " Make almost everything (except the lower unprintable ASCII characters,
+    " including the desired delimiter <Tab>) a keyword character to be able to
+    " include spaces and other non-alphabetic characters like ["'()] in
+    " thesaurus words, and only have <Tab> as delimiter. 
     " Note that this has the side effect of only allowing completion from
-    " whitespace-separated completion bases. 
+    " <Tab> and other lower-ASCII-separated completion bases, since the
+    " i_CTRL-X_CTRL-T completion both determines the completion base and
+    " generates the completion matches with the same (modified) 'iskeyword'
+    " setting. We would need to write our own custom completion to get around
+    " this. Instead, we work around this via CompleteThesaurusMod(), see above. 
     let s:save_iskeyword = &l:iskeyword
     setlocal iskeyword=@,32-255
+
     return l:modifier
 endfunction
 inoremap <expr> <SID>(CompleteThesaurusPrep) <SID>CompleteThesaurusPrep()
 function! s:CompleteThesaurusFix()
     let &l:iskeyword = s:save_iskeyword
 
-
-    let l:save_pos = getpos('.')
+    " Remove the temporary Unit Separator at the beginning of the inserted
+    " completion match. 
+    let l:cursorCol = col('.')
     let l:textBeforeCursor = strpart(getline('.'), 0, col('.') - 1)
+    if strridx(l:textBeforeCursor, nr2char(31)) != -1
+	substitute/\%d31//e
+	call cursor(line('.'), l:cursorCol - 1)
+    endif
 
     " Convert newline symbol to actual newline. 
     let l:lastNewlineCol = strridx(l:textBeforeCursor, nr2char(182))
