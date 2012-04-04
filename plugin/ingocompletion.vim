@@ -9,6 +9,10 @@
 " REVISION	DATE		REMARKS 
 "	022	22-Jan-2012	Add <SID>CompleteStopInsert() hook to <CR> for
 "				BidiComplete's immediate leave of insert mode. 
+"				CHG: In the popup menu, 9 (not 0) is now the
+"				shortcut key for the last visible completion
+"				match. This is hopefully more intuitive, as I
+"				often got this wrong in the past. 
 "	021	15-Dec-2011	Work around thesaurus completion's limitation of
 "				treating all whitespace and non-keyword
 "				characters as delimiters. Limit the delimites to
@@ -256,25 +260,24 @@ endfunction
 inoremap <silent> <script> <expr> <CR> pumvisible() ? '<C-y><C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR><C-r>=<SID>CompleteStopInsert()<CR>' : '<CR>'
 
 "			Quick access accelerators for the popup menu: 
-" 1-6			In the popup menu: Accept the first, second, ... visible
+" 1-5			In the popup menu: Accept the first, second, ... visible
 "			offered match and stop completion. 
-" 0, 9-7		In the popup menu: Accept the last, second-from-last,
+" 9-6			In the popup menu: Accept the last, second-from-last,
 "			... visible offered match and stop completion. 
 "			These assume a freshly opened popup menu where no
 "			selection (via <Up>/<Down>/...) has yet been made. 
 "			In a backward completion (first candidate at bottom),
-"			the counting starts from the bottom, too; i.e. 0 is the
+"			the counting starts from the bottom, too; i.e. 9 is the
 "			candidate displayed at the top of the completion popup. 
 inoremap <expr> 1 pumvisible() ? '<C-y>' : '1'
 inoremap <expr> 2 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up><C-y>'                 : '<Down><C-y>'                         : '2'
 inoremap <expr> 3 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up><Up><C-y>'             : '<Down><Down><C-y>'                   : '3'
 inoremap <expr> 4 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up><Up><Up><C-y>'         : '<Down><Down><Down><C-y>'             : '4'
 inoremap <expr> 5 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up><Up><Up><Up><C-y>'     : '<Down><Down><Down><Down><C-y>'       : '5'
-inoremap <expr> 6 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up><Up><Up><Up><Up><C-y>' : '<Down><Down><Down><Down><Down><C-y>' : '6'
-inoremap <expr> 0 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><Up><C-Y>'         : '<PageDown><Down><C-y>'               : '0'
-inoremap <expr> 9 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><C-Y>'             : '<PageDown><C-y>'                     : '9'
-inoremap <expr> 8 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><Down><C-y>'       : '<PageDown><Up><C-y>'                 : '8'
-inoremap <expr> 7 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><Down><Down><C-y>' : '<PageDown><Up><Up><C-y>'             : '7'
+inoremap <expr> 9 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><Up><C-Y>'         : '<PageDown><Down><C-y>'               : '9'
+inoremap <expr> 8 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><C-Y>'             : '<PageDown><C-y>'                     : '8'
+inoremap <expr> 7 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><Down><C-y>'       : '<PageDown><Up><C-y>'                 : '7'
+inoremap <expr> 6 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><Down><Down><C-y>' : '<PageDown><Up><Up><C-y>'             : '6'
 
 " Aliases for |popupmenu-keys|:
 " CTRL-F		Use a match several entries further. This doesn't work
