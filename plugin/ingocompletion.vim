@@ -7,6 +7,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	023	05-Apr-2012	Remove i_CTRL-] shortening; it prevents manual
+"				abbreviation expansion and was overridden by
+"				snipMate.vim, anyway.
 "	022	22-Jan-2012	Add <SID>CompleteStopInsert() hook to <CR> for
 "				BidiComplete's immediate leave of insert mode. 
 "				CHG: In the popup menu, 9 (not 0) is now the
@@ -515,11 +518,8 @@ endif
 "- additional completion triggers ---------------------------------------------
 
 " Shorten some commonly used insert completions. 
-" CTRL-]		Tag completion |i_CTRL-X_CTRL-]|
 " CTRL-F		File name completion |i_CTRL-X_CTRL-F|
-"
-imap <C-]> <C-x><C-]>
-" The CTRL-F mapping is included in the popupmenu overload above. 
+" Note: The CTRL-F mapping is included in the popupmenu overload above. 
 "imap <C-f> <C-x><C-f>
 
 
