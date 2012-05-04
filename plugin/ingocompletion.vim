@@ -7,6 +7,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	025	05-May-2012	Switch order in s:EnableCompletionPreview() to
+"				avoid unexpected scrolling in popup menu when
+"				moving along forward.
+"				ENH: When an unused preview window exists, keep
+"				/ enable completion preview instead of disabling
+"				it (when a new completion starts).
 "	024	04-May-2012	ENH: Enable completeopt=preview on demand via
 "				CTRL-W_CTRL-P in the completion popup menu, and
 "				automatically disable it again when a match is
@@ -254,7 +260,7 @@ inoremap <expr> <SID>(CompleteThesaurusFixSetup) <SID>CompleteThesaurusFixSetup(
 "			need to re-enable this for each completion.
 function! s:EnableCompletionPreview()
     set completeopt+=preview
-    return "\<Down>\<Up>"
+    return "\<Up>\<Down>"
 endfunction
 " Note: Even when all keys that can conclude a completion are wrapped in this,
 " it still doesn't cover all cases (e.g. continued typing to get out of the
@@ -340,15 +346,28 @@ function! s:SetUndo()
     call setpos("'" . s:IngoCompletion_UndoMark, getpos('.'))
     return ''
 endfunction
+" Note: Sneak in handling of the completion preview; as we cannot catch all
+" situations when completion stops, better ensure that the setting is reset when
+" starting a new completion, or keeping / enabling the setting when an unused
+" preview window exists.
+function! s:CheckCompletionPreview()
+    let l:previewWinnr = ingowindow#IsPreviewWindowVisible()
+    if l:previewWinnr && empty(bufname(winbufnr(l:previewWinnr))) && ! getwinvar(l:previewWinnr, '&modifiable')
+	" The preview window is open and contains an unmodifiable scratch
+	" buffer, presumably from a previous completion preview. Keep / enable
+	" completion preview.
+	call s:EnableCompletionPreview()
+    else
+	call s:DisableCompletionPreview('')
+    endif
+    return ''
+endfunction
 " Note: By using a :map-expr that doesn't return anything and setting the
 " mark via setpos() instead of the 'm' command, subsequent CTRL-X CTRL-N
 " commands can be used to continue the completion with following words. Any
 " inserted key (even CTRL-R=...<CR>) would break this.
-" Note: Sneak in turning off the completion preview; as we cannot catch all
-" situations when completion stops, better ensure that the setting is reset when
-" starting a new completion.
-inoremap <expr> <Plug>CompleteoptLongestSetUndo <SID>SetUndo().<SID>DisableCompletionPreview('')
-inoremap <expr> <SID>CompleteoptLongestSetUndo <SID>SetUndo().<SID>DisableCompletionPreview('')
+inoremap <expr> <Plug>CompleteoptLongestSetUndo <SID>SetUndo().<SID>CheckCompletionPreview()
+inoremap <expr> <SID>CompleteoptLongestSetUndo <SID>SetUndo().<SID>CheckCompletionPreview()
 function! s:UndoLongest()
     " Only undo when the undo point is intact; i.e. the window, buffer and mark
     " are still the same.
