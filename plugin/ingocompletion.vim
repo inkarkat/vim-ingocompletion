@@ -13,6 +13,9 @@
 "				ENH: When an unused preview window exists, keep
 "				/ enable completion preview instead of disabling
 "				it (when a new completion starts).
+"				Rename <Plug>CompleteoptLongestSetUndo to
+"				<Plug>(CompleteStart), because it now also
+"				includes the handling for completion preview.
 "	024	04-May-2012	ENH: Enable completeopt=preview on demand via
 "				CTRL-W_CTRL-P in the completion popup menu, and
 "				automatically disable it again when a match is
@@ -266,7 +269,7 @@ endfunction
 " it still doesn't cover all cases (e.g. continued typing to get out of the
 " completion). Rather than use another fire-once autocmd to turn this off, we
 " use the fact that (almost all?) completion mappings include the
-" <Plug>CompleteoptLongestSetUndo mapping, and as it's enough to disable the
+" <Plug>(CompleteStart) mapping, and as it's enough to disable the
 " setting before the next completion, go for this instead.
 function! s:DisableCompletionPreview( wrappedMapping )
     set completeopt-=preview
@@ -316,14 +319,14 @@ inoremap <expr> 6 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp
 "			in filename completion, where CTRL-F goes to the next
 "			matching filename.
 " CTRL-B		Use a match several entries back.
-inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>CompleteoptLongestSetUndo<C-x><C-f>'
+inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>(CompleteStart)<C-x><C-f>'
 inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 
 " <Esc>			Abort completion, go back to what was typed.
 "			In contrast to |i_CTRL-E|, this also erases the longest
 "			common string.
 " Note: To implement the total abort of completion, all mappings that start a
-" completion must prepend <Plug>CompleteoptLongestSetUndo.
+" completion must prepend <Plug>(CompleteStart).
 
 function! s:RecordUndoPoint( positionExpr )
     " The undo point record consists of the position of a:positionExpr and the
@@ -338,9 +341,9 @@ endfunction
 let s:IngoCompletion_UndoMark = (v:version < 702 ? "'" : '"')
 function! s:SetUndo()
     " Separately record information about the undo point so that a completion
-    " that does not prepend <Plug>CompleteoptLongestSetUndo (e.g. because it's
-    " not under my control) doesn't wreak havoc to the buffer. (This happened
-    " when aborting a fuf.vim search.)
+    " that does not prepend <Plug>(CompleteStart) (e.g. because it's not under
+    " my control) doesn't wreak havoc to the buffer. (This happened when
+    " aborting a fuf.vim search.)
     let w:IngoCompetion_UndoPoint = s:RecordUndoPoint('.')
 
     call setpos("'" . s:IngoCompletion_UndoMark, getpos('.'))
@@ -366,8 +369,8 @@ endfunction
 " mark via setpos() instead of the 'm' command, subsequent CTRL-X CTRL-N
 " commands can be used to continue the completion with following words. Any
 " inserted key (even CTRL-R=...<CR>) would break this.
-inoremap <expr> <Plug>CompleteoptLongestSetUndo <SID>SetUndo().<SID>CheckCompletionPreview()
-inoremap <expr> <SID>CompleteoptLongestSetUndo <SID>SetUndo().<SID>CheckCompletionPreview()
+inoremap <expr> <Plug>(CompleteStart) <SID>SetUndo().<SID>CheckCompletionPreview()
+inoremap <expr> <SID>(CompleteStart) <SID>SetUndo().<SID>CheckCompletionPreview()
 function! s:UndoLongest()
     " Only undo when the undo point is intact; i.e. the window, buffer and mark
     " are still the same.
@@ -521,34 +524,34 @@ if &completeopt =~# 'longest'
     inoremap <script> <expr> <C-p> pumvisible() ? '<C-p>' : '<SID>InlineCompletePrev'
 
     " Install <Plug>CompleteoptLongestSelect for all built-in completion types.
-    inoremap <script> <C-x><C-k> <SID>CompleteoptLongestSetUndo<C-x><C-k><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-t> <SID>CompleteoptLongestSetUndo<SID>(CompleteThesaurusPrep)<C-x><C-t><SID>(CompleteThesaurusFixSetup)<SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-]> <SID>CompleteoptLongestSetUndo<C-x><C-]><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-f> <SID>CompleteoptLongestSetUndo<C-x><C-f><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-v> <SID>CompleteoptLongestSetUndo<C-x><C-v><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-u> <SID>CompleteoptLongestSetUndo<C-x><C-u><SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-o> <SID>CompleteoptLongestSetUndo<C-x><C-o><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-k> <SID>(CompleteStart)<C-x><C-k><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-t> <SID>(CompleteStart)<SID>(CompleteThesaurusPrep)<C-x><C-t><SID>(CompleteThesaurusFixSetup)<SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-]> <SID>(CompleteStart)<C-x><C-]><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-f> <SID>(CompleteStart)<C-x><C-f><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-v> <SID>(CompleteStart)<C-x><C-v><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-u> <SID>(CompleteStart)<C-x><C-u><SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-o> <SID>(CompleteStart)<C-x><C-o><SID>CompleteoptLongestSelectNext
     " Integrate spell suggestion completion with ingospell.vim.
     " Note: This is done here, because somehow using :imap and
     " <Plug>CompleteoptLongestSelectNext always inserts "Next" instead of
     " showing the completion popup menu.
-    "inoremap <script> <C-x>s     <SID>CompleteoptLongestSetUndo<C-x>s<SID>CompleteoptLongestSelectNext
-    "inoremap <script> <C-x><C-s> <SID>CompleteoptLongestSetUndo<C-x><C-s><SID>CompleteoptLongestSelectNext
+    "inoremap <script> <C-x>s     <SID>(CompleteStart)<C-x>s<SID>CompleteoptLongestSelectNext
+    "inoremap <script> <C-x><C-s> <SID>(CompleteStart)<C-x><C-s><SID>CompleteoptLongestSelectNext
     inoremap <silent> <expr> <SID>SpellCompletePreWrapper SpellCompletePreWrapper()
     inoremap <silent> <expr> <SID>SpellCompletePostWrapper SpellCompletePostWrapper()
-    inoremap <script> <C-x>s     <SID>CompleteoptLongestSetUndo<SID>SpellCompletePreWrapper<C-x>s<SID>SpellCompletePostWrapper<SID>CompleteoptLongestSelectNext
-    inoremap <script> <C-x><C-s> <SID>CompleteoptLongestSetUndo<SID>SpellCompletePreWrapper<C-x><C-s><SID>SpellCompletePostWrapper<SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x>s     <SID>(CompleteStart)<SID>SpellCompletePreWrapper<C-x>s<SID>SpellCompletePostWrapper<SID>CompleteoptLongestSelectNext
+    inoremap <script> <C-x><C-s> <SID>(CompleteStart)<SID>SpellCompletePreWrapper<C-x><C-s><SID>SpellCompletePostWrapper<SID>CompleteoptLongestSelectNext
 
     " All completion mappings that allow repetition need a special mapping: To be
     " able to repeat, the match must have been inserted via CTRL-N/P, not just
     " selected. Committing the selection via CTRL-Y completely finishes the
     " completion and prevents repetition, so that cannot be used as a
     " workaround, neither.
-    inoremap <script> <expr> <C-x><C-l> pumvisible() ? '<Up><C-n><C-x><C-l>' : '<SID>CompleteoptLongestSetUndo<C-x><C-l><SID>CompleteoptLongestSelectNext'
-    inoremap <script> <expr> <C-x><C-n> pumvisible() ? '<Up><C-n><C-x><C-n>' : '<SID>CompleteoptLongestSetUndo<C-x><C-n><SID>CompleteoptLongestSelectNext'
-    inoremap <script> <expr> <C-x><C-p> pumvisible() ? '<Down><C-p><C-x><C-p>' : '<SID>CompleteoptLongestSetUndo<C-x><C-p><SID>CompleteoptLongestSelectPrev'
-    inoremap <script> <expr> <C-x><C-i> pumvisible() ? '<Up><C-n><C-x><C-i>' : '<SID>CompleteoptLongestSetUndo<C-x><C-i><SID>CompleteoptLongestSelectNext'
-    inoremap <script> <expr> <C-x><C-d> pumvisible() ? '<Up><C-n><C-x><C-d>' : '<SID>CompleteoptLongestSetUndo<C-x><C-d><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-x><C-l> pumvisible() ? '<Up><C-n><C-x><C-l>' : '<SID>(CompleteStart)<C-x><C-l><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-x><C-n> pumvisible() ? '<Up><C-n><C-x><C-n>' : '<SID>(CompleteStart)<C-x><C-n><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-x><C-p> pumvisible() ? '<Down><C-p><C-x><C-p>' : '<SID>(CompleteStart)<C-x><C-p><SID>CompleteoptLongestSelectPrev'
+    inoremap <script> <expr> <C-x><C-i> pumvisible() ? '<Up><C-n><C-x><C-i>' : '<SID>(CompleteStart)<C-x><C-i><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-x><C-d> pumvisible() ? '<Up><C-n><C-x><C-d>' : '<SID>(CompleteStart)<C-x><C-d><SID>CompleteoptLongestSelectNext'
 else
     " Custom completion types are enhanced by defining custom mappings to the
     " <Plug>...Completion mappings in 00ingoplugin.vim. This is also defined
@@ -574,10 +577,10 @@ endif
 "			when the completion popup is visible.
 "inoremap <expr> <C-Space>  pumvisible() ? "<C-N>" : "<C-N><C-R>=pumvisible() ? \"\\<lt>Down>\" : \"\"<CR>"
 if has('gui_running') || has('win32') || has('win64')
-    inoremap <script> <expr> <C-Space> pumvisible() ? '<C-n>' : '<SID>CompleteoptLongestSetUndo<C-x><C-u><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <C-Space> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-u><SID>CompleteoptLongestSelectNext'
 else
     " On the Linux console, <C-Space> does not work, but <nul> does.
-    inoremap <script> <expr> <nul> pumvisible() ? '<C-n>' : '<SID>CompleteoptLongestSetUndo<C-x><C-u><SID>CompleteoptLongestSelectNext'
+    inoremap <script> <expr> <nul> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-u><SID>CompleteoptLongestSelectNext'
 endif
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
