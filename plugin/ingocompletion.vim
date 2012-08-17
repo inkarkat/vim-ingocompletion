@@ -7,6 +7,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	027	12-May-2012	Change CTRL-W_CTRL-P to CTRL-G_CTRL-P to avoid
+"				delaying CTRL-W (delete word under cursor),
+"				which is important in console Vim.
 "	026	09-May-2012	Rename <Plug>CompleteoptLongestSelect.
 "	025	05-May-2012	Switch order in s:EnableCompletionPreview() to
 "				avoid unexpected scrolling in popup menu when
@@ -259,7 +262,7 @@ function! s:CompleteThesaurusFixSetup()
 endfunction
 inoremap <expr> <SID>(CompleteThesaurusFixSetup) <SID>CompleteThesaurusFixSetup()
 
-" CTRL-W_CTRL-P		Show extra information about the currently selected
+" i_CTRL-G_CTRL-P	Show extra information about the currently selected
 "			completion in the preview window (if available). You
 "			need to re-enable this for each completion.
 function! s:EnableCompletionPreview()
@@ -276,7 +279,7 @@ function! s:DisableCompletionPreview( wrappedMapping )
     set completeopt-=preview
     return a:wrappedMapping
 endfunction
-imap <expr> <C-w><C-p> pumvisible() ? <SID>EnableCompletionPreview() : '<C-w><C-p>'
+imap <expr> <C-g><C-p> pumvisible() ? <SID>EnableCompletionPreview() : '<C-g><C-p>'
 
 " <Enter>		Accept the currently selected match and stop completion.
 "			Alias for |i_CTRL-Y|.
@@ -567,7 +570,7 @@ endif
 "- additional completion triggers ---------------------------------------------
 
 " Shorten some commonly used insert completions.
-" CTRL-F		File name completion |i_CTRL-X_CTRL-F|
+" i_CTRL-F		File name completion |i_CTRL-X_CTRL-F|
 " Note: The CTRL-F mapping is included in the popupmenu overload above.
 "imap <C-f> <C-x><C-f>
 
