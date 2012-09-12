@@ -7,6 +7,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	028	18-Aug-2012	In s:CompleteThesaurusFix(), remove the
+"				temporary Unit Separator globally; when doing
+"				completion with snipMate mirroring, the Unit
+"				Separator is mirrored, too, so it should be
+"				removed, too. Of course, OTOH it would be more
+"				correct to limit the substitution to before the
+"				cursor.
 "	027	12-May-2012	Change CTRL-W_CTRL-P to CTRL-G_CTRL-P to avoid
 "				delaying CTRL-W (delete word under cursor),
 "				which is important in console Vim.
@@ -229,7 +236,7 @@ function! s:CompleteThesaurusFix()
     let l:cursorCol = col('.')
     let l:textBeforeCursor = strpart(getline('.'), 0, col('.') - 1)
     if strridx(l:textBeforeCursor, nr2char(31)) != -1
-	substitute/\%d31//e
+	substitute/\%d31//ge
 	call cursor(line('.'), l:cursorCol - 1)
     endif
 
