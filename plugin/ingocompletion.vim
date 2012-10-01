@@ -7,6 +7,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	029	13-Sep-2012	BUG: Must use :imap for <CR> hook, or
+"				abbreviations aren't expanded any longer. Use
+"				intermediate :inoremap <SID>PumCR mapping to
+"				avoid that literal keys like <C-r> are remapped,
+"				too.
 "	028	18-Aug-2012	In s:CompleteThesaurusFix(), remove the
 "				temporary Unit Separator globally; when doing
 "				completion with snipMate mirroring, the Unit
@@ -286,7 +291,7 @@ function! s:DisableCompletionPreview( wrappedMapping )
     set completeopt-=preview
     return a:wrappedMapping
 endfunction
-imap <expr> <C-g><C-p> pumvisible() ? <SID>EnableCompletionPreview() : '<C-g><C-p>'
+inoremap <expr> <C-g><C-p> pumvisible() ? <SID>EnableCompletionPreview() : '<C-g><C-p>'
 
 " <Enter>		Accept the currently selected match and stop completion.
 "			Alias for |i_CTRL-Y|.
@@ -303,7 +308,10 @@ function! s:CompleteStopInsert()
 	return ''
     endif
 endfunction
-inoremap <silent> <script> <expr> <CR> pumvisible() ? <SID>DisableCompletionPreview('<C-y>').'<C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR><C-r>=<SID>CompleteStopInsert()<CR>' : '<CR>'
+inoremap <silent> <expr> <SID>PumCR <SID>DisableCompletionPreview('<C-y>').'<C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR><C-r>=<SID>CompleteStopInsert()<CR>'
+" Note: Cannot use :inoremap here; abbreviations wouldn't be expanded any
+" longer.
+imap <silent> <expr> <CR> pumvisible() ? '<SID>PumCR' : '<CR>'
 
 "			Quick access accelerators for the popup menu:
 " 1-5			In the popup menu: Accept the first, second, ... visible
