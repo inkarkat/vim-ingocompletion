@@ -7,6 +7,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	030	02-Oct-2012	Add <Plug>(CompleteStart) definition for other
+"				modes.
 "	029	13-Sep-2012	BUG: Must use :imap for <CR> hook, or
 "				abbreviations aren't expanded any longer. Use
 "				intermediate :inoremap <SID>PumCR mapping to
@@ -389,6 +391,9 @@ endfunction
 " commands can be used to continue the completion with following words. Any
 " inserted key (even CTRL-R=...<CR>) would break this.
 inoremap <expr> <Plug>(CompleteStart) <SID>SetUndo().<SID>CheckCompletionPreview()
+" Some completions may be triggered from other modes (e.g. MotionComplete allows
+" to select the completion base in visual / select mode).
+noremap  <expr> <Plug>(CompleteStart) <SID>SetUndo().<SID>CheckCompletionPreview()
 inoremap <expr> <SID>(CompleteStart) <SID>SetUndo().<SID>CheckCompletionPreview()
 function! s:UndoLongest()
     " Only undo when the undo point is intact; i.e. the window, buffer and mark
