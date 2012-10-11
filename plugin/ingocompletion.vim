@@ -7,6 +7,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	031	11-Oct-2012	BUG: Must use :imap for <Esc> hook, or
+"				abbreviations aren't expanded any longer.
 "	030	02-Oct-2012	Add <Plug>(CompleteStart) definition for other
 "				modes.
 "	029	13-Sep-2012	BUG: Must use :imap for <CR> hook, or
@@ -409,7 +411,9 @@ function! s:UndoLongest()
     endif
     return ''
 endfunction
-inoremap <script> <expr> <Esc>      pumvisible() ? <SID>DisableCompletionPreview('<C-e>') . <SID>UndoLongest() : '<Esc>'
+" Note: Cannot use :inoremap here; abbreviations wouldn't be expanded any
+" longer.
+imap <expr> <Esc>      pumvisible() ? <SID>DisableCompletionPreview('<C-e>') . <SID>UndoLongest() : '<Esc>'
 
 
 
