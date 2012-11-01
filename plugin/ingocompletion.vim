@@ -7,6 +7,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	032	12-Oct-2012	Use omni completion instead of user completion
+"				for <C-Space> mapping; many useful completions
+"				(Python, HTML, CSS, JavaScript, ...) ship with
+"				Vim.
 "	031	11-Oct-2012	BUG: Must use :imap for <Esc> hook, or
 "				abbreviations aren't expanded any longer.
 "	030	02-Oct-2012	Add <Plug>(CompleteStart) definition for other
@@ -600,15 +604,15 @@ endif
 
 
 " vimtip #1228, vimtip #1386: Completion popup selection like other IDEs.
-" i_CTRL-Space		IDE-like generic completion (via the last-used user
-"			completion ('completefunc'). Also cycles through matches
+" i_CTRL-Space		IDE-like generic completion (via the last-used omni
+"			completion ('omnifunc'). Also cycles through matches
 "			when the completion popup is visible.
 "inoremap <expr> <C-Space>  pumvisible() ? "<C-N>" : "<C-N><C-R>=pumvisible() ? \"\\<lt>Down>\" : \"\"<CR>"
 if has('gui_running') || has('win32') || has('win64')
-    inoremap <script> <expr> <C-Space> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-u><SID>(CompleteoptLongestSelectNext)'
+    inoremap <script> <expr> <C-Space> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)'
 else
     " On the Linux console, <C-Space> does not work, but <nul> does.
-    inoremap <script> <expr> <nul> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-u><SID>(CompleteoptLongestSelectNext)'
+    inoremap <script> <expr> <nul> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)'
 endif
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
