@@ -178,6 +178,8 @@ if exists('g:loaded_ingocompletion') || (v:version < 700)
     finish
 endif
 let g:loaded_ingocompletion = 1
+let s:save_cpo = &cpo
+set cpo&vim
 
 "- popup menu mappings and behavior -------------------------------------------
 
@@ -316,7 +318,11 @@ endfunction
 function! s:CompleteThesaurusFixSetup()
     augroup CompleteThesaurusFix
 	autocmd!
-	autocmd CursorMovedI * if ! exists('g:snipPos') | call <SID>CompleteThesaurusFix() | execute 'autocmd! CompleteThesaurusFix' | endif
+	" Assume that snippet expansion is done when the global snipMate context
+	" isn't there, or when the cursor is at the end of the current line.
+	autocmd CursorMovedI * if ! exists('g:snipPos') || col('.') >= col('$') |
+	\   call <SID>CompleteThesaurusFix() | execute 'autocmd! CompleteThesaurusFix' |
+	\endif
 	autocmd InsertLeave,BufLeave * call <SID>CompleteThesaurusFix() | autocmd! CompleteThesaurusFix
     augroup END
 
@@ -660,4 +666,6 @@ else
     inoremap <script> <expr> <nul> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)'
 endif
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
