@@ -273,7 +273,9 @@ function! s:CompleteThesaurusPrep()
     " generates the completion matches with the same (modified) 'iskeyword'
     " setting. We would need to write our own custom completion to get around
     " this. Instead, we work around this via CompleteThesaurusMod(), see above.
-    let s:save_iskeyword = &l:iskeyword
+    if ! exists('s:save_iskeyword')
+	let s:save_iskeyword = &l:iskeyword
+    endif
     setlocal iskeyword=@,32-255
 
     return l:modifier
@@ -281,18 +283,24 @@ endfunction
 inoremap <expr> <SID>(CompleteThesaurusPrep) <SID>CompleteThesaurusPrep()
 function! s:CompleteThesaurusFix()
     let &l:iskeyword = s:save_iskeyword
+    unlet s:save_iskeyword
     let l:didSubstitute = 0
 
     " Remove the temporary Unit Separator at the beginning of the inserted
     " completion match.
     let l:cursorCol = col('.')
-    let l:textBeforeCursor = strpart(getline('.'), 0, col('.') - 1)
+    let l:textBeforeCursor = matchstr(getline('.'), '^.*\%'.col('.').'c')
+echomsg '****' string(getpos('.')) string(l:textBeforeCursor)
     if strridx(l:textBeforeCursor, nr2char(31)) != -1
 	substitute/\%d31//ge
 	let l:didSubstitute = 1
 	let l:offset = strlen(substitute(l:textBeforeCursor, '[^'.nr2char(31).']', '', 'g'))
 	call cursor(line('.'), l:cursorCol - l:offset)
+echomsg '**** did'
     endif
+    " let l:save_cursor = getpos('.')
+	"keepjumps %substitute/\%d31//ge
+    " call setpos('.', l:save_cursor)
 
     " Convert newline symbol to actual newline.
     let l:lastNewlineCol = strridx(l:textBeforeCursor, nr2char(182))
@@ -320,10 +328,11 @@ function! s:CompleteThesaurusFixSetup()
 	autocmd!
 	" Assume that snippet expansion is done when the global snipMate context
 	" isn't there, or when the cursor is at the end of the current line.
-	autocmd CursorMovedI * if ! exists('g:snipPos') || col('.') >= col('$') |
-	\   call <SID>CompleteThesaurusFix() | execute 'autocmd! CompleteThesaurusFix' |
-	\endif
-	autocmd InsertLeave,BufLeave * call <SID>CompleteThesaurusFix() | autocmd! CompleteThesaurusFix
+	autocmd CursorMovedI,InsertLeave *
+	\   if ! exists('g:snipPos') || col('.') >= col('$') |
+	\	call <SID>CompleteThesaurusFix() | execute 'autocmd! CompleteThesaurusFix' |
+	\   endif
+	autocmd BufLeave * call <SID>CompleteThesaurusFix() | autocmd! CompleteThesaurusFix
     augroup END
 
     return ''
