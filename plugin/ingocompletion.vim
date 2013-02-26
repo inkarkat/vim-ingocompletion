@@ -7,6 +7,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	034	27-Feb-2013	FIX: Avoid clobbering the search history in
+"				s:CompleteThesaurusFix() and
+"				s:CompleteMultilineFix().
 "	033	02-Nov-2012	XXX: FuzzyFinder uses the completion popup for
 "				its own selection control; our enhancements
 "				prevent the abort of the FuzzyFinder search via
@@ -191,6 +194,8 @@ function! s:CompleteMultilineFix()
     " Integration into CompleteHelper.vim.
     call CompleteHelper#Repeat#SetRecord()
 
+    call histdel('search', -1)
+
     return ''
 endfunction
 function! s:CompleteMultilineFixSetup()
@@ -247,6 +252,7 @@ endfunction
 inoremap <expr> <SID>(CompleteThesaurusPrep) <SID>CompleteThesaurusPrep()
 function! s:CompleteThesaurusFix()
     let &l:iskeyword = s:save_iskeyword
+    let l:didSubstitute = 0
 
     " Remove the temporary Unit Separator at the beginning of the inserted
     " completion match.
@@ -254,25 +260,28 @@ function! s:CompleteThesaurusFix()
     let l:textBeforeCursor = strpart(getline('.'), 0, col('.') - 1)
     if strridx(l:textBeforeCursor, nr2char(31)) != -1
 	substitute/\%d31//ge
+	let l:didSubstitute = 1
 	call cursor(line('.'), l:cursorCol - 1)
     endif
 
     " Convert newline symbol to actual newline.
     let l:lastNewlineCol = strridx(l:textBeforeCursor, nr2char(182))
-    if l:lastNewlineCol == -1
-	" Nothing to do.
-	return ''
+    if l:lastNewlineCol != -1
+	substitute/\%d182/\r/ge
+	let l:didSubstitute = 1
+
+	" The substitute command positions the cursor at the first column of the
+	" last line inserted. This is fine when the completion ended with a newline,
+	" but needs correction when an incomplete last line has been inserted.
+	call cursor(line('.'), len(l:textBeforeCursor) - l:lastNewlineCol)
     endif
-
-    substitute/\%d182/\r/ge
-
-    " The substitute command positions the cursor at the first column of the
-    " last line inserted. This is fine when the completion ended with a newline,
-    " but needs correction when an incomplete last line has been inserted.
-    call cursor(line('.'), len(l:textBeforeCursor) - l:lastNewlineCol)
 
     " Integration into CompleteHelper.vim.
     call CompleteHelper#Repeat#SetRecord()
+
+    if l:didSubstitute
+	call histdel('search', -1)
+    endif
 
     return ''
 endfunction
@@ -428,6 +437,7 @@ imap <expr> <Esc>      pumvisible() && bufname('') !=# '[fuf]' ? <SID>DisableCom
 
 
 "- inline completion without popup menu ---------------------------------------
+
 " i_CTRL-N / i_CTRL-P	Inline completion without popup menu:
 " 	    		Find next/previous match for words that start with the
 "	    		keyword in front of the cursor, looking in places
