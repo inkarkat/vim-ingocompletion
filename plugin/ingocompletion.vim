@@ -7,6 +7,28 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	035	27-Feb-2013	Make CompleteMultilineFix and
+"				CompleteThesaurusFix more robust by including
+"				triggers on InsertLeave and BufLeave; we don't
+"				want to skip applying the fixes or apply them in
+"				the wrong buffer.
+"				Better handling of CompleteThesaurusFix inside
+"				snipMate snippets. Adapting the tabstop
+"				positions is too difficult; instead, postpone
+"				the deletion of the temporary Unit Separators
+"				until snippet editing is done. For
+"				re-triggering, do not insert a Unit Separator
+"				when there's already one before the current
+"				keyword. And correctly calculate the cursor
+"				position when multiple Unit Separators have been
+"				deleted. FIXME: Strangely, after multiple
+"				thesaurus completions in a snippet (e.g.
+"				"vimscript" in stackoverflow.snippets), the
+"				inexplicably jumps back to the beginning of the
+"				snippet, even though the CompleteThesaurusFix
+"				has correctly set the cursor (a jump mark is
+"				even there), and there's no InsertLeave handler
+"				interfering (it happens even on <C-c>).
 "	034	27-Feb-2013	FIX: Avoid clobbering the search history in
 "				s:CompleteThesaurusFix() and
 "				s:CompleteMultilineFix().
@@ -201,19 +223,24 @@ endfunction
 function! s:CompleteMultilineFixSetup()
     augroup CompleteMultilineFix
 	autocmd!
-	autocmd CursorMovedI * call <SID>CompleteMultilineFix() | autocmd! CompleteMultilineFix
+	autocmd CursorMovedI,InsertLeave,BufLeave * call <SID>CompleteMultilineFix() | autocmd! CompleteMultilineFix
     augroup END
 
     return ''
 endfunction
 inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup()
 
-function! CompleteThesaurusMod( col )
-    " Insert the temporary Unit Separator in position a:col, and adapt the
+function! CompleteThesaurusMod( start )
+    " Insert the temporary Unit Separator in position a:start, and adapt the
     " cursor position.
     let l:cursorCol = col('.')
 	let l:line = getline('.')
-	let l:modline = strpart(l:line, 0, a:col) . nr2char(31) . strpart(l:line, a:col)
+	if matchstr(l:line, '.\%' . (a:start + 1) . 'c') == nr2char(31)
+	    " There's already a Unit Separator in front of the keyword before
+	    " the cursor.
+	    return ''
+	endif
+	let l:modline = strpart(l:line, 0, a:start) . nr2char(31) . strpart(l:line, a:start)
 	call setline('.', l:modline)
     call cursor(line('.'), l:cursorCol + 1)
     return ''
@@ -261,7 +288,8 @@ function! s:CompleteThesaurusFix()
     if strridx(l:textBeforeCursor, nr2char(31)) != -1
 	substitute/\%d31//ge
 	let l:didSubstitute = 1
-	call cursor(line('.'), l:cursorCol - 1)
+	let l:offset = strlen(substitute(l:textBeforeCursor, '[^'.nr2char(31).']', '', 'g'))
+	call cursor(line('.'), l:cursorCol - l:offset)
     endif
 
     " Convert newline symbol to actual newline.
@@ -288,7 +316,8 @@ endfunction
 function! s:CompleteThesaurusFixSetup()
     augroup CompleteThesaurusFix
 	autocmd!
-	autocmd CursorMovedI * call <SID>CompleteThesaurusFix() | autocmd! CompleteThesaurusFix
+	autocmd CursorMovedI * if ! exists('g:snipPos') | call <SID>CompleteThesaurusFix() | execute 'autocmd! CompleteThesaurusFix' | endif
+	autocmd InsertLeave,BufLeave * call <SID>CompleteThesaurusFix() | autocmd! CompleteThesaurusFix
     augroup END
 
     return ''
