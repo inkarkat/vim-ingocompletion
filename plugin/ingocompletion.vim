@@ -7,6 +7,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	033	02-Nov-2012	XXX: FuzzyFinder uses the completion popup for
+"				its own selection control; our enhancements
+"				prevent the abort of the FuzzyFinder search via
+"				<Esc>.
 "	032	12-Oct-2012	Use omni completion instead of user completion
 "				for <C-Space> mapping; many useful completions
 "				(Python, HTML, CSS, JavaScript, ...) ship with
@@ -417,7 +421,9 @@ function! s:UndoLongest()
 endfunction
 " Note: Cannot use :inoremap here; abbreviations wouldn't be expanded any
 " longer.
-imap <expr> <Esc>      pumvisible() ? <SID>DisableCompletionPreview('<C-e>') . <SID>UndoLongest() : '<Esc>'
+" XXX: FuzzyFinder uses the completion popup for its own selection control; our
+" enhancements prevent the abort of the FuzzyFinder search via <Esc>.
+imap <expr> <Esc>      pumvisible() && bufname('') !=# '[fuf]' ? <SID>DisableCompletionPreview('<C-e>') . <SID>UndoLongest() : '<Esc>'
 
 
 
