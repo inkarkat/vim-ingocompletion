@@ -21,14 +21,11 @@
 "				when there's already one before the current
 "				keyword. And correctly calculate the cursor
 "				position when multiple Unit Separators have been
-"				deleted. FIXME: Strangely, after multiple
-"				thesaurus completions in a snippet (e.g.
-"				"vimscript" in stackoverflow.snippets), the
-"				inexplicably jumps back to the beginning of the
-"				snippet, even though the CompleteThesaurusFix
-"				has correctly set the cursor (a jump mark is
-"				even there), and there's no InsertLeave handler
-"				interfering (it happens even on <C-c>).
+"				deleted. And also remove the Unit Separators
+"				from all other lines; the snippet may have
+"				mirrored them there.
+"				FIX: Make retrieval of l:textBeforeCursor
+"				multibyte-safe.
 "	034	27-Feb-2013	FIX: Avoid clobbering the search history in
 "				s:CompleteThesaurusFix() and
 "				s:CompleteMultilineFix().
@@ -274,6 +271,9 @@ function! s:CompleteThesaurusPrep()
     " setting. We would need to write our own custom completion to get around
     " this. Instead, we work around this via CompleteThesaurusMod(), see above.
     if ! exists('s:save_iskeyword')
+	" When the CompleteThesaurusFix hasn't been applied yet, but another
+	" thesaurus completion is triggered, we must not clobber the original,
+	" correct saved option value with the temporary one.
 	let s:save_iskeyword = &l:iskeyword
     endif
     setlocal iskeyword=@,32-255
@@ -284,29 +284,26 @@ inoremap <expr> <SID>(CompleteThesaurusPrep) <SID>CompleteThesaurusPrep()
 function! s:CompleteThesaurusFix()
     let &l:iskeyword = s:save_iskeyword
     unlet s:save_iskeyword
-    let l:didSubstitute = 0
 
     " Remove the temporary Unit Separator at the beginning of the inserted
     " completion match.
     let l:cursorCol = col('.')
     let l:textBeforeCursor = matchstr(getline('.'), '^.*\%'.col('.').'c')
-echomsg '****' string(getpos('.')) string(l:textBeforeCursor)
     if strridx(l:textBeforeCursor, nr2char(31)) != -1
 	substitute/\%d31//ge
-	let l:didSubstitute = 1
 	let l:offset = strlen(substitute(l:textBeforeCursor, '[^'.nr2char(31).']', '', 'g'))
 	call cursor(line('.'), l:cursorCol - l:offset)
-echomsg '**** did'
     endif
-    " let l:save_cursor = getpos('.')
-	"keepjumps %substitute/\%d31//ge
-    " call setpos('.', l:save_cursor)
+    let l:save_cursor = getpos('.')
+	" Snippets may have mirrored the thesaurus completion to other lines.
+	" Those need the temporary Unit Separator removed, too.
+	keepjumps %substitute/\%d31//ge
+    call setpos('.', l:save_cursor)
 
     " Convert newline symbol to actual newline.
     let l:lastNewlineCol = strridx(l:textBeforeCursor, nr2char(182))
     if l:lastNewlineCol != -1
 	substitute/\%d182/\r/ge
-	let l:didSubstitute = 1
 
 	" The substitute command positions the cursor at the first column of the
 	" last line inserted. This is fine when the completion ended with a newline,
@@ -317,17 +314,14 @@ echomsg '**** did'
     " Integration into CompleteHelper.vim.
     call CompleteHelper#Repeat#SetRecord()
 
-    if l:didSubstitute
-	call histdel('search', -1)
-    endif
-
+    call histdel('search', -1)
     return ''
 endfunction
 function! s:CompleteThesaurusFixSetup()
     augroup CompleteThesaurusFix
 	autocmd!
 	" Assume that snippet expansion is done when the global snipMate context
-	" isn't there, or when the cursor is at the end of the current line.
+	" isn't there, or when the cursor jumped to the end of the current line.
 	autocmd CursorMovedI,InsertLeave *
 	\   if ! exists('g:snipPos') || col('.') >= col('$') |
 	\	call <SID>CompleteThesaurusFix() | execute 'autocmd! CompleteThesaurusFix' |
