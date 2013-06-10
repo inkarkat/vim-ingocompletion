@@ -1,12 +1,14 @@
 " ingocompletion.vim: Customization of completions.
 "
 " DEPENDENCIES:
+"   - ingo/window/preview.vim autoload script
 "   - Uses functions defined in ingospell.vim for |i_CTRL-X_CTRL-S|
 "     modifications.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	036	08-Apr-2013	Move ingowindow.vim functions into ingo-library.
 "	035	27-Feb-2013	Make CompleteMultilineFix and
 "				CompleteThesaurusFix more robust by including
 "				triggers on InsertLeave and BufLeave; we don't
@@ -432,7 +434,7 @@ endfunction
 " starting a new completion, or keeping / enabling the setting when an unused
 " preview window exists.
 function! s:CheckCompletionPreview()
-    let l:previewWinnr = ingowindow#IsPreviewWindowVisible()
+    let l:previewWinnr = ingo#window#preview#IsPreviewWindowVisible()
     if l:previewWinnr && empty(bufname(winbufnr(l:previewWinnr))) && ! getwinvar(l:previewWinnr, '&modifiable')
 	" The preview window is open and contains an unmodifiable scratch
 	" buffer, presumably from a previous completion preview. Keep / enable
