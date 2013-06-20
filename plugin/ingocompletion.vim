@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	037	21-Jun-2013	FIX: Forgot <SID>(CompleteoptLongestSelectNext)
+"				in imap <C-f>.
 "	036	08-Apr-2013	Move ingowindow.vim functions into ingo-library.
 "	035	27-Feb-2013	Make CompleteMultilineFix and
 "				CompleteThesaurusFix more robust by including
@@ -399,7 +401,7 @@ inoremap <expr> 6 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp
 "			in filename completion, where CTRL-F goes to the next
 "			matching filename.
 " CTRL-B		Use a match several entries back.
-inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>(CompleteStart)<C-x><C-f>'
+inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>(CompleteStart)<C-x><C-f><SID>(CompleteoptLongestSelectNext)'
 inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 
 " <Esc>			Abort completion, go back to what was typed.
