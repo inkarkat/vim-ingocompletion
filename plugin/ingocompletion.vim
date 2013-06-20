@@ -103,7 +103,7 @@
 "				column correction in multi-line completion fix.
 "				BUG: Must only add the multi-line completion fix
 "				to the pumvisible()-branch of <CR>; doing this
-"				now directly in the ex command-line without
+"				now directly in the Ex command-line without
 "				another <SID>-mapping.
 "	018	04-Oct-2011	Add fix for multi-line completion problem.
 "	017	30-Sep-2011	Avoid showing internal commands and expressions
