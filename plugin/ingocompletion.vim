@@ -10,6 +10,11 @@
 " REVISION	DATE		REMARKS
 "	037	21-Jun-2013	FIX: Forgot <SID>(CompleteoptLongestSelectNext)
 "				in imap <C-f>.
+"				ENH: On Windows, when completing paths that only
+"				consist of forward slashes, temporarily set
+"				'shellslash' so that the completion candidates
+"				use forward slashes instead of the default
+"				backslashes, too.
 "	036	08-Apr-2013	Move ingowindow.vim functions into ingo-library.
 "	035	27-Feb-2013	Make CompleteMultilineFix and
 "				CompleteThesaurusFix more robust by including
@@ -181,6 +186,36 @@ endif
 let g:loaded_ingocompletion = 1
 let s:save_cpo = &cpo
 set cpo&vim
+
+"- customization of completion behavior ----------------------------------------
+
+" CTRL-X CTRL-F		On Windows, when completing paths that only consist of
+"			forward slashes, temporarily set 'shellslash' so that
+"			the completion candidates use forward slashes instead of
+"			the default backslashes, too.
+if exists('+shellslash')
+    function! s:CompleteFilePathSeparatorStart()
+	let l:startCol = searchpos('\f*\%#', 'bn', line('.'))[1]
+	if l:startCol == 0
+	    return ''
+	endif
+	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
+	let [l:native, l:foreign] = (&shellslash ? ['/', '\'] : ['\', '/'])
+	if stridx(l:base, l:native) == -1 && stridx(l:base, l:foreign) != -1
+	    augroup CompleteFilePathSeparator
+		execute printf('autocmd! CursorMovedI,InsertLeave,BufLeave * let &shellslash=%d | autocmd! CompleteFilePathSeparator', &shellslash)
+	    augroup END
+	    let &shellslash = ! &shellslash
+	endif
+
+	return ''
+    endfunction
+    inoremap <silent> <expr> <SID>(CompleteFilePathSeparatorStart) <SID>CompleteFilePathSeparatorStart()
+else
+    inoremap <silent> <SID>(CompleteFilePathSeparatorStart) <Nop>
+endif
+
+
 
 "- popup menu mappings and behavior -------------------------------------------
 
@@ -401,7 +436,7 @@ inoremap <expr> 6 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp
 "			in filename completion, where CTRL-F goes to the next
 "			matching filename.
 " CTRL-B		Use a match several entries back.
-inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>(CompleteStart)<C-x><C-f><SID>(CompleteoptLongestSelectNext)'
+inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>(CompleteFilePathSeparatorStart)<SID>(CompleteStart)<C-x><C-f><SID>(CompleteoptLongestSelectNext)'
 inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 
 " <Esc>			Abort completion, go back to what was typed.
@@ -617,7 +652,7 @@ if &completeopt =~# 'longest'
     inoremap <script> <C-x><C-k> <SID>(CompleteStart)<C-x><C-k><SID>(CompleteoptLongestSelectNext)
     inoremap <script> <C-x><C-t> <SID>(CompleteStart)<SID>(CompleteThesaurusPrep)<C-x><C-t><SID>(CompleteThesaurusFixSetup)<SID>(CompleteoptLongestSelectNext)
     inoremap <script> <C-x><C-]> <SID>(CompleteStart)<C-x><C-]><SID>(CompleteoptLongestSelectNext)
-    inoremap <script> <C-x><C-f> <SID>(CompleteStart)<C-x><C-f><SID>(CompleteoptLongestSelectNext)
+    inoremap <script> <C-x><C-f> <SID>(CompleteFilePathSeparatorStart)<SID>(CompleteStart)<C-x><C-f><SID>(CompleteoptLongestSelectNext)
     inoremap <script> <C-x><C-v> <SID>(CompleteStart)<C-x><C-v><SID>(CompleteoptLongestSelectNext)
     inoremap <script> <C-x><C-u> <SID>(CompleteStart)<C-x><C-u><SID>(CompleteoptLongestSelectNext)
     inoremap <script> <C-x><C-o> <SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)
