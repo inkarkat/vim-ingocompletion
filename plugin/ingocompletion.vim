@@ -8,6 +8,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	038	06-Aug-2013	Expose <Plug>PumCR for use in overloaded
+"				buffer-local <CR> mappings; used by
+"				ftplugin/xml_ingoabb.vim.
 "	037	21-Jun-2013	FIX: Forgot <SID>(CompleteoptLongestSelectNext)
 "				in imap <C-f>.
 "				ENH: On Windows, when completing paths that only
@@ -406,7 +409,8 @@ function! s:CompleteStopInsert()
 	return ''
     endif
 endfunction
-inoremap <silent> <expr> <SID>PumCR <SID>DisableCompletionPreview('<C-y>').'<C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR><C-r>=<SID>CompleteStopInsert()<CR>'
+inoremap <silent> <expr>  <SID>PumCR <SID>DisableCompletionPreview('<C-y>').'<C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR><C-r>=<SID>CompleteStopInsert()<CR>'
+inoremap <silent> <expr> <Plug>PumCR <SID>DisableCompletionPreview('<C-y>').'<C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR><C-r>=<SID>CompleteStopInsert()<CR>'
 " Note: Cannot use :inoremap here; abbreviations wouldn't be expanded any
 " longer.
 imap <silent> <expr> <CR> pumvisible() ? '<SID>PumCR' : '<CR>'
