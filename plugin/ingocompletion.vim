@@ -1,6 +1,7 @@
 " ingocompletion.vim: Customization of completions.
 "
 " DEPENDENCIES:
+"   - ingo/os.vim autoload script
 "   - ingo/window/preview.vim autoload script
 "   - Uses functions defined in ingospell.vim for |i_CTRL-X_CTRL-S|
 "     modifications.
@@ -8,6 +9,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   	039	13-Sep-2013	Use operating system detection functions from
+"				ingo/os.vim.
 "	038	06-Aug-2013	Expose <Plug>PumCR for use in overloaded
 "				buffer-local <CR> mappings; used by
 "				ftplugin/xml_ingoabb.vim.
@@ -705,7 +708,7 @@ endif
 "			completion ('omnifunc'). Also cycles through matches
 "			when the completion popup is visible.
 "inoremap <expr> <C-Space>  pumvisible() ? "<C-N>" : "<C-N><C-R>=pumvisible() ? \"\\<lt>Down>\" : \"\"<CR>"
-if has('gui_running') || has('win32') || has('win64')
+if has('gui_running') || ingo#os#IsWinOrDos()
     inoremap <script> <expr> <C-Space> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)'
 else
     " On the Linux console, <C-Space> does not work, but <nul> does.
