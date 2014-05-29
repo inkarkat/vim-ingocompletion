@@ -9,6 +9,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	040	23-Jan-2014	Adapt <C-e>/<C-y> mappings to changed
+"				InsertFromAround.vim <Plug>-mapping names.
 "   	039	13-Sep-2013	Use operating system detection functions from
 "				ingo/os.vim.
 "	038	06-Aug-2013	Expose <Plug>PumCR for use in overloaded
@@ -599,8 +601,8 @@ inoremap <expr> <SID>CompletedCall ingosupertab#Completed()
 "imap <expr> <C-e> pumvisible() ? <SID>DisableCompletionPreview('<C-e>') : <SID>IsInlineComplete() ? <SID>UndoLongest()        : '<C-E>'
 "imap <expr> <C-y> pumvisible() ? <SID>DisableCompletionPreview('<C-y>') : <SID>IsInlineComplete() ? ' <BS><SID>CompletedCall' : '<C-Y>'
 " This is overloaded with "Insert from Below / Above", cp. ingomappings.vim.
-imap <expr> <C-e> pumvisible() ? <SID>DisableCompletionPreview('<C-e>') : <SID>IsInlineComplete() ? <SID>UndoLongest()        : '<Plug>InsertFromBelow'
-imap <expr> <C-y> pumvisible() ? <SID>DisableCompletionPreview('<C-y>') : <SID>IsInlineComplete() ? ' <BS><SID>CompletedCall' : '<Plug>InsertFromAbove'
+imap <expr> <C-e> pumvisible() ? <SID>DisableCompletionPreview('<C-e>') : <SID>IsInlineComplete() ? <SID>UndoLongest()        : '<Plug>(InsertFromTextBelow)'
+imap <expr> <C-y> pumvisible() ? <SID>DisableCompletionPreview('<C-y>') : <SID>IsInlineComplete() ? ' <BS><SID>CompletedCall' : '<Plug>(InsertFromTextAbove)'
 
 
 
