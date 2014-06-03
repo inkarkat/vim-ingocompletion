@@ -2,6 +2,7 @@
 "
 " DEPENDENCIES:
 "   - ingo/os.vim autoload script
+"   - ingo/record.vim autoload script
 "   - ingo/window/preview.vim autoload script
 "   - Uses functions defined in ingospell.vim for |i_CTRL-X_CTRL-S|
 "     modifications.
@@ -9,6 +10,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	041	30-May-2014	Factor out ingo#record#Position().
 "	040	23-Jan-2014	Adapt <C-e>/<C-y> mappings to changed
 "				InsertFromAround.vim <Plug>-mapping names.
 "   	039	13-Sep-2013	Use operating system detection functions from
@@ -530,13 +532,6 @@ imap <expr> <Esc>      pumvisible() && bufname('') !=# '[fuf]' ? <SID>DisableCom
 "			specified with the 'complete' option.
 "			The first match is inserted fully, key repeats will step
 "			through the completion matches without showing a menu.
-function! s:RecordPosition()
-    " The position record consists of the current cursor position, the buffer
-    " number and its current change state. When this position record is assigned
-    " to a window-local variable, it is also linked to the current window and
-    " tab page.
-    return getpos('.') + [bufnr(''), b:changedtick]
-endfunction
 function! s:IsInlineComplete()
     " This function clears the stored w:IngoCompetion_InlineCompletePosition, so
     " that when an inline completion has no matches, the first <Esc> clears this
@@ -547,7 +542,7 @@ function! s:IsInlineComplete()
     " A consecutive CTRL-N at the same position will re-set the position through
     " its autocmd, anyway.
     if exists('w:IngoCompetion_InlineCompletePosition')
-	if s:RecordPosition() == w:IngoCompetion_InlineCompletePosition
+	if ingo#record#Position(1) == w:IngoCompetion_InlineCompletePosition
 	    unlet w:IngoCompetion_InlineCompletePosition
 	    return 1
 	endif
@@ -574,7 +569,7 @@ function! s:InlineComplete( completionKey )
     set completeopt=
     augroup InlineCompleteOff
 	autocmd!
-	autocmd BufLeave,WinLeave,InsertLeave,CursorMovedI <buffer> let &completeopt = s:save_completeopt | let w:IngoCompetion_InlineCompletePosition = s:RecordPosition() | autocmd! InlineCompleteOff
+	autocmd BufLeave,WinLeave,InsertLeave,CursorMovedI <buffer> let &completeopt = s:save_completeopt | let w:IngoCompetion_InlineCompletePosition = ingo#record#Position(1) | autocmd! InlineCompleteOff
     augroup END
 
     if ! s:IsInlineComplete()
