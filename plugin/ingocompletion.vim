@@ -10,6 +10,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	042	04-Jun-2014	Use CompleteDone event when available (reliably
+"				since Vim 7.3.813), and where possible.
 "	041	30-May-2014	Factor out ingo#record#Position().
 "	040	23-Jan-2014	Adapt <C-e>/<C-y> mappings to changed
 "				InsertFromAround.vim <Plug>-mapping names.
@@ -197,6 +199,16 @@ let g:loaded_ingocompletion = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
+" Note: The CursorMovedI event is not fired during completion with the popup
+" menu.
+let s:CompleteEntirelyDone = 'BufLeave,WinLeave,InsertLeave,CursorMovedI'
+if v:version == 703 && has('patch813') || v:version > 703
+    let s:CompleteDone = 'CompleteDone'
+else
+    let s:CompleteDone = s:CompleteEntirelyDone
+endif
+
+
 "- customization of completion behavior ----------------------------------------
 
 " CTRL-X CTRL-F		On Windows, when completing paths that only consist of
@@ -213,7 +225,12 @@ if exists('+shellslash')
 	let [l:native, l:foreign] = (&shellslash ? ['/', '\'] : ['\', '/'])
 	if stridx(l:base, l:native) == -1 && stridx(l:base, l:foreign) != -1
 	    augroup CompleteFilePathSeparator
-		execute printf('autocmd! CursorMovedI,InsertLeave,BufLeave * let &shellslash=%d | autocmd! CompleteFilePathSeparator', &shellslash)
+		" Note: Cannot use s:CompleteDone here, because on repeat of
+		" file complete, this function is triggered first, and then Vim
+		" fires the CompleteDone event (as the previous completion is
+		" completed by the retriggered completion), which would undo the
+		" temp option value too early!
+		execute printf('autocmd! %s * let &shellslash=%d | autocmd! CompleteFilePathSeparator', s:CompleteEntirelyDone, &shellslash)
 	    augroup END
 	    let &shellslash = ! &shellslash
 	endif
@@ -233,10 +250,9 @@ endif
 "			Currently, completion matches are inserted literally,
 "			with newlines represented by ^@. Vim should expand this
 "			into proper newlines. We work around this via an autocmd
-"			that fires once after completion (the CursorMovedI event
-"			is not fired during completion with the popup menu), and
-"			by hooking into the <CR> key. (<C-Y> apparently works
-"			even without this.)
+"			that fires once after completion, and by hooking into
+"			the <CR> key. (<C-Y> apparently works even without
+"			this.)
 "			(FIXME: It seems to be fired once after the initial
 "			completion trigger with empty 'completeopt'.)
 "			Usage: All CTRL-X_... completion mappings that may
@@ -270,7 +286,7 @@ function! s:CompleteMultilineFix()
 endfunction
 function! s:CompleteMultilineFixSetup()
     augroup CompleteMultilineFix
-	autocmd! CursorMovedI,InsertLeave,BufLeave * call <SID>CompleteMultilineFix() | autocmd! CompleteMultilineFix
+	execute 'autocmd!' s:CompleteDone '* call <SID>CompleteMultilineFix() | autocmd! CompleteMultilineFix'
     augroup END
 
     return ''
@@ -374,7 +390,7 @@ function! s:CompleteThesaurusFixSetup()
 	\   if ! exists('g:snipPos') || col('.') >= col('$') |
 	\	call <SID>CompleteThesaurusFix() | execute 'autocmd! CompleteThesaurusFix' |
 	\   endif
-	autocmd BufLeave * call <SID>CompleteThesaurusFix() | autocmd! CompleteThesaurusFix
+	autocmd BufLeave,WinLeave * call <SID>CompleteThesaurusFix() | autocmd! CompleteThesaurusFix
     augroup END
 
     return ''
@@ -567,7 +583,7 @@ function! s:InlineComplete( completionKey )
     let s:save_completeopt = &completeopt
     set completeopt=
     augroup InlineCompleteOff
-	autocmd! BufLeave,WinLeave,InsertLeave,CursorMovedI <buffer> let &completeopt = s:save_completeopt | let w:IngoCompetion_InlineCompletePosition = ingo#record#Position(1) | autocmd! InlineCompleteOff
+	execute 'autocmd!' s:CompleteDone '<buffer> let &completeopt = s:save_completeopt | let w:IngoCompetion_InlineCompletePosition = ingo#record#Position(1) | autocmd! InlineCompleteOff'
     augroup END
 
     if ! s:IsInlineComplete()
