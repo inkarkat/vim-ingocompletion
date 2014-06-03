@@ -270,8 +270,7 @@ function! s:CompleteMultilineFix()
 endfunction
 function! s:CompleteMultilineFixSetup()
     augroup CompleteMultilineFix
-	autocmd!
-	autocmd CursorMovedI,InsertLeave,BufLeave * call <SID>CompleteMultilineFix() | autocmd! CompleteMultilineFix
+	autocmd! CursorMovedI,InsertLeave,BufLeave * call <SID>CompleteMultilineFix() | autocmd! CompleteMultilineFix
     augroup END
 
     return ''
@@ -568,8 +567,7 @@ function! s:InlineComplete( completionKey )
     let s:save_completeopt = &completeopt
     set completeopt=
     augroup InlineCompleteOff
-	autocmd!
-	autocmd BufLeave,WinLeave,InsertLeave,CursorMovedI <buffer> let &completeopt = s:save_completeopt | let w:IngoCompetion_InlineCompletePosition = ingo#record#Position(1) | autocmd! InlineCompleteOff
+	autocmd! BufLeave,WinLeave,InsertLeave,CursorMovedI <buffer> let &completeopt = s:save_completeopt | let w:IngoCompetion_InlineCompletePosition = ingo#record#Position(1) | autocmd! InlineCompleteOff
     augroup END
 
     if ! s:IsInlineComplete()
