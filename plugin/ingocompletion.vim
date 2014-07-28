@@ -12,6 +12,9 @@
 " REVISION	DATE		REMARKS
 "	042	04-Jun-2014	Use CompleteDone event when available (reliably
 "				since Vim 7.3.813), and where possible.
+"				Add <C-x>[N]<C-t> imaps that temporarily limit
+"				'thesaurus' to the [N]'th entry (undo on
+"				CompleteDone); same for 'dictionary'.
 "	041	30-May-2014	Factor out ingo#record#Position().
 "	040	23-Jan-2014	Adapt <C-e>/<C-y> mappings to changed
 "				InsertFromAround.vim <Plug>-mapping names.
@@ -706,7 +709,7 @@ endif
 
 
 
-"- additional completion triggers ---------------------------------------------
+"- Additional completion triggers ---------------------------------------------
 
 " Shorten some commonly used insert completions.
 " i_CTRL-F		File name completion |i_CTRL-X_CTRL-F|
@@ -725,6 +728,67 @@ else
     " On the Linux console, <C-Space> does not work, but <nul> does.
     inoremap <script> <expr> <nul> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)'
 endif
+
+
+
+" CTRL-X [N] CTRL-D	Limit 'dictionary' to the [N]'th entry for this
+"			triggered |i_CTRL-X_CTRL-D| completion.
+" CTRL-X [N] CTRL-T	Limit 'thesaurus' to the [N]'th entry for this
+"			triggered |i_CTRL-X_CTRL-T| completion.
+function! s:ChooseOptionFile( optionName, count )
+    execute 'let l:optionValue = &' . a:optionName
+    let l:allOptions = ingo#option#Split(l:optionValue)
+    if a:count > len(l:allOptions)
+	call ingo#msg#ErrorMsg(printf("Only %d '%s' value%s", len(l:allOptions), a:optionName, (len(l:allOptions) == 1 ? '' : 's')))
+	return ''
+    endif
+
+    augroup TemporarySingleOptionValue
+	execute printf('autocmd! %s * let &%s = %s | autocmd! TemporarySingleOptionValue', s:CompleteDone, a:optionName, string(l:optionValue))
+    augroup END
+
+    execute 'let &' . a:optionName '= l:allOptions[a:count - 1]'
+
+    return ''
+endfunction
+" Note: Use :imap to include any embellishments (e.g. complete longest +
+" preselect) of the completion trigger.
+inoremap <expr> <SID>(ChooseDictionaryFile1) <SID>ChooseOptionFile('dictionary', 1)
+inoremap <expr> <SID>(ChooseDictionaryFile2) <SID>ChooseOptionFile('dictionary', 2)
+inoremap <expr> <SID>(ChooseDictionaryFile3) <SID>ChooseOptionFile('dictionary', 3)
+inoremap <expr> <SID>(ChooseDictionaryFile4) <SID>ChooseOptionFile('dictionary', 4)
+inoremap <expr> <SID>(ChooseDictionaryFile5) <SID>ChooseOptionFile('dictionary', 5)
+inoremap <expr> <SID>(ChooseDictionaryFile6) <SID>ChooseOptionFile('dictionary', 6)
+inoremap <expr> <SID>(ChooseDictionaryFile7) <SID>ChooseOptionFile('dictionary', 7)
+inoremap <expr> <SID>(ChooseDictionaryFile8) <SID>ChooseOptionFile('dictionary', 8)
+inoremap <expr> <SID>(ChooseDictionaryFile9) <SID>ChooseOptionFile('dictionary', 9)
+imap <C-x>1<C-d> <SID>(ChooseDictionaryFile1)<C-x><C-t>
+imap <C-x>2<C-d> <SID>(ChooseDictionaryFile2)<C-x><C-t>
+imap <C-x>3<C-d> <SID>(ChooseDictionaryFile3)<C-x><C-t>
+imap <C-x>4<C-d> <SID>(ChooseDictionaryFile4)<C-x><C-t>
+imap <C-x>5<C-d> <SID>(ChooseDictionaryFile5)<C-x><C-t>
+imap <C-x>6<C-d> <SID>(ChooseDictionaryFile6)<C-x><C-t>
+imap <C-x>7<C-d> <SID>(ChooseDictionaryFile7)<C-x><C-t>
+imap <C-x>8<C-d> <SID>(ChooseDictionaryFile8)<C-x><C-t>
+imap <C-x>9<C-d> <SID>(ChooseDictionaryFile9)<C-x><C-t>
+inoremap <expr> <SID>(ChooseThesaurusFile1) <SID>ChooseOptionFile('thesaurus', 1)
+inoremap <expr> <SID>(ChooseThesaurusFile2) <SID>ChooseOptionFile('thesaurus', 2)
+inoremap <expr> <SID>(ChooseThesaurusFile3) <SID>ChooseOptionFile('thesaurus', 3)
+inoremap <expr> <SID>(ChooseThesaurusFile4) <SID>ChooseOptionFile('thesaurus', 4)
+inoremap <expr> <SID>(ChooseThesaurusFile5) <SID>ChooseOptionFile('thesaurus', 5)
+inoremap <expr> <SID>(ChooseThesaurusFile6) <SID>ChooseOptionFile('thesaurus', 6)
+inoremap <expr> <SID>(ChooseThesaurusFile7) <SID>ChooseOptionFile('thesaurus', 7)
+inoremap <expr> <SID>(ChooseThesaurusFile8) <SID>ChooseOptionFile('thesaurus', 8)
+inoremap <expr> <SID>(ChooseThesaurusFile9) <SID>ChooseOptionFile('thesaurus', 9)
+imap <C-x>1<C-t> <SID>(ChooseThesaurusFile1)<C-x><C-t>
+imap <C-x>2<C-t> <SID>(ChooseThesaurusFile2)<C-x><C-t>
+imap <C-x>3<C-t> <SID>(ChooseThesaurusFile3)<C-x><C-t>
+imap <C-x>4<C-t> <SID>(ChooseThesaurusFile4)<C-x><C-t>
+imap <C-x>5<C-t> <SID>(ChooseThesaurusFile5)<C-x><C-t>
+imap <C-x>6<C-t> <SID>(ChooseThesaurusFile6)<C-x><C-t>
+imap <C-x>7<C-t> <SID>(ChooseThesaurusFile7)<C-x><C-t>
+imap <C-x>8<C-t> <SID>(ChooseThesaurusFile8)<C-x><C-t>
+imap <C-x>9<C-t> <SID>(ChooseThesaurusFile9)<C-x><C-t>
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
