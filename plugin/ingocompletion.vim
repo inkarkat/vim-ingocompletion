@@ -6,10 +6,15 @@
 "   - ingo/window/preview.vim autoload script
 "   - Uses functions defined in ingospell.vim for |i_CTRL-X_CTRL-S|
 "     modifications.
+"   - InsertAllCompletions/CompleteFunc.vim autoload script
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	044	04-Jan-2015	Add integration with InsertAllCompletions.vim by
+"				hooking into all completion mappings that are
+"				supported by BuiltInCompletes.vim and custom
+"				ones.
 "	043	29-Jul-2014	Overload <S-CR> to work like "2" when the popup
 "				menu is visible.
 "	042	04-Jun-2014	Use CompleteDone event when available (reliably
@@ -212,6 +217,15 @@ if v:version == 703 && has('patch813') || v:version > 703
 else
     let s:CompleteDone = s:CompleteEntirelyDone
 endif
+
+
+"- Integration with InsertAllCompletions.vim -----------------------------------
+
+inoremap <expr> <SID>(BuiltInComplete) InsertAllCompletions#CompleteFunc#Set('BuiltInCompletes#Complete')
+inoremap <expr> <SID>(BuiltInLocalComplete) InsertAllCompletions#CompleteFunc#Set('BuiltInCompletes#LocalComplete')
+inoremap <expr> <SID>(BuiltInTagComplete) InsertAllCompletions#CompleteFunc#Set('BuiltInCompletes#TagComplete')
+inoremap <expr> <SID>(BuiltInOmniComplete) InsertAllCompletions#CompleteFunc#Set(&omnifunc)
+
 
 
 "- customization of completion behavior ----------------------------------------
@@ -659,10 +673,12 @@ if &completeopt =~# 'longest'
     inoremap <silent>  <SID>(CompleteoptLongestSelectPrev) <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
     " Integration into ingosupertab.vim.
     function! ingocompletion#Complete()
+	call InsertAllCompletions#CompleteFunc#Set('BuiltInCompletes#Complete')
 	call s:SetUndo()
 	return "\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>"
     endfunction
     function! ingocompletion#ContinueComplete()
+	call InsertAllCompletions#CompleteFunc#Set('BuiltInCompletes#Complete')
 	return (pumvisible() ? "\<Down>\<C-p>\<C-x>\<C-p>" : "\<C-x>\<C-p>\<C-r>=pumvisible() ? \"\\<Up>\" : \"\"\<CR>")
     endfunction
     let g:IngoSuperTab_complete = function('ingocompletion#Complete')
@@ -678,7 +694,7 @@ if &completeopt =~# 'longest'
     " Install <Plug>(CompleteoptLongestSelect) for all built-in completion types.
     inoremap <script> <C-x><C-k> <SID>(CompleteStart)<C-x><C-k><SID>(CompleteoptLongestSelectNext)
     inoremap <script> <C-x><C-t> <SID>(CompleteStart)<SID>(CompleteThesaurusPrep)<C-x><C-t><SID>(CompleteThesaurusFixSetup)<SID>(CompleteoptLongestSelectNext)
-    inoremap <script> <C-x><C-]> <SID>(CompleteStart)<C-x><C-]><SID>(CompleteoptLongestSelectNext)
+    inoremap <script> <C-x><C-]> <SID>(BuiltInTagComplete)<SID>(CompleteStart)<C-x><C-]><SID>(CompleteoptLongestSelectNext)
     inoremap <script> <C-x><C-f> <SID>(CompleteFilePathSeparatorStart)<SID>(CompleteStart)<C-x><C-f><SID>(CompleteoptLongestSelectNext)
     inoremap <script> <C-x><C-v> <SID>(CompleteStart)<C-x><C-v><SID>(CompleteoptLongestSelectNext)
     inoremap <script> <C-x><C-u> <SID>(CompleteStart)<C-x><C-u><SID>(CompleteoptLongestSelectNext)
@@ -700,8 +716,8 @@ if &completeopt =~# 'longest'
     " completion and prevents repetition, so that cannot be used as a
     " workaround, neither.
     inoremap <script> <expr> <C-x><C-l> pumvisible() ? '<Up><C-n><C-x><C-l>' : '<SID>(CompleteStart)<C-x><C-l><SID>(CompleteoptLongestSelectNext)'
-    inoremap <script> <expr> <C-x><C-n> pumvisible() ? '<Up><C-n><C-x><C-n>' : '<SID>(CompleteStart)<C-x><C-n><SID>(CompleteoptLongestSelectNext)'
-    inoremap <script> <expr> <C-x><C-p> pumvisible() ? '<Down><C-p><C-x><C-p>' : '<SID>(CompleteStart)<C-x><C-p><SID>(CompleteoptLongestSelectPrev)'
+    inoremap <script> <expr> <C-x><C-n> pumvisible() ? '<Up><C-n><C-x><C-n>' : '<SID>(BuiltInLocalComplete)<SID>(CompleteStart)<C-x><C-n><SID>(CompleteoptLongestSelectNext)'
+    inoremap <script> <expr> <C-x><C-p> pumvisible() ? '<Down><C-p><C-x><C-p>' : '<SID>(BuiltInLocalComplete)<SID>(CompleteStart)<C-x><C-p><SID>(CompleteoptLongestSelectPrev)'
     inoremap <script> <expr> <C-x><C-i> pumvisible() ? '<Up><C-n><C-x><C-i>' : '<SID>(CompleteStart)<C-x><C-i><SID>(CompleteoptLongestSelectNext)'
     inoremap <script> <expr> <C-x><C-d> pumvisible() ? '<Up><C-n><C-x><C-d>' : '<SID>(CompleteStart)<C-x><C-d><SID>(CompleteoptLongestSelectNext)'
 else
@@ -729,10 +745,10 @@ endif
 "			when the completion popup is visible.
 "inoremap <expr> <C-Space>  pumvisible() ? "<C-N>" : "<C-N><C-R>=pumvisible() ? \"\\<lt>Down>\" : \"\"<CR>"
 if has('gui_running') || ingo#os#IsWinOrDos()
-    inoremap <script> <expr> <C-Space> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)'
+    inoremap <script> <expr> <C-Space> pumvisible() ? '<C-n>' : '<SID>(BuiltInOmniComplete)<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)'
 else
     " On the Linux console, <C-Space> does not work, but <nul> does.
-    inoremap <script> <expr> <nul> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)'
+    inoremap <script> <expr> <nul> pumvisible() ? '<C-n>' : '<SID>(BuiltInOmniComplete)<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)'
 endif
 
 
