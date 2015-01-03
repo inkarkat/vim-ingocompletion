@@ -10,6 +10,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	043	29-Jul-2014	Overload <S-CR> to work like "2" when the popup
+"				menu is visible.
 "	042	04-Jun-2014	Use CompleteDone event when available (reliably
 "				since Vim 7.3.813), and where possible.
 "				Add <C-x>[N]<C-t> imaps that temporarily limit
@@ -450,8 +452,12 @@ imap <silent> <expr> <CR> pumvisible() ? '<SID>PumCR' : '<CR>'
 "			In a backward completion (first candidate at bottom),
 "			the counting starts from the bottom, too; i.e. 9 is the
 "			candidate displayed at the top of the completion popup.
+" <S-CR>		In the popup menu: Accept the second visible offered
+"			match and stop completion; shortcut for 2 that may be
+"			quicker to reach.
 inoremap <expr> 1 pumvisible() ? <SID>DisableCompletionPreview('<C-y>') : '1'
 inoremap <expr> 2 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up>'.<SID>DisableCompletionPreview('<C-y>')                 : '<Down>'.<SID>DisableCompletionPreview('<C-y>')                         : '2'
+imap <expr><S-CR> pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up>'.<SID>DisableCompletionPreview('<C-y>')                 : '<Down>'.<SID>DisableCompletionPreview('<C-y>')                         : '<Plug>(GotoNextLineAtSameColumn)'
 inoremap <expr> 3 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up><Up>'.<SID>DisableCompletionPreview('<C-y>')             : '<Down><Down>'.<SID>DisableCompletionPreview('<C-y>')                   : '3'
 inoremap <expr> 4 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up><Up><Up>'.<SID>DisableCompletionPreview('<C-y>')         : '<Down><Down><Down>'.<SID>DisableCompletionPreview('<C-y>')             : '4'
 inoremap <expr> 5 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up><Up><Up><Up>'.<SID>DisableCompletionPreview('<C-y>')     : '<Down><Down><Down><Down>'.<SID>DisableCompletionPreview('<C-y>')       : '5'
@@ -612,7 +618,7 @@ inoremap <expr> <SID>InlineCompletePrev <SID>InlineComplete("\<lt>C-p>")
 inoremap <expr> <SID>CompletedCall ingosupertab#Completed()
 "imap <expr> <C-e> pumvisible() ? <SID>DisableCompletionPreview('<C-e>') : <SID>IsInlineComplete() ? <SID>UndoLongest()        : '<C-E>'
 "imap <expr> <C-y> pumvisible() ? <SID>DisableCompletionPreview('<C-y>') : <SID>IsInlineComplete() ? ' <BS><SID>CompletedCall' : '<C-Y>'
-" This is overloaded with "Insert from Below / Above", cp. ingomappings.vim.
+" This is overloaded with "Insert from Below / Above", cp. InsertFromAround.vim
 imap <expr> <C-e> pumvisible() ? <SID>DisableCompletionPreview('<C-e>') : <SID>IsInlineComplete() ? <SID>UndoLongest()        : '<Plug>(InsertFromTextBelow)'
 imap <expr> <C-y> pumvisible() ? <SID>DisableCompletionPreview('<C-y>') : <SID>IsInlineComplete() ? ' <BS><SID>CompletedCall' : '<Plug>(InsertFromTextAbove)'
 
