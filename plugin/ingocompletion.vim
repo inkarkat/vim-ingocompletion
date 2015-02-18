@@ -501,6 +501,16 @@ inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 " Note: To implement the total abort of completion, all mappings that start a
 " completion must prepend <Plug>(CompleteStart).
 
+function! s:InputSave()
+    call inputsave()
+    return ''
+endfunction
+function! s:InputRestore()
+    call inputrestore()
+    return ''
+endfunction
+inoremap <expr> <SID>(InputRestore) <SID>InputRestore()
+
 function! s:RecordUndoPoint( positionExpr )
     " The undo point record consists of the position of a:positionExpr and the
     " buffer number. When this position record is assigned to a window-local
@@ -542,11 +552,11 @@ endfunction
 " mark via setpos() instead of the 'm' command, subsequent CTRL-X CTRL-N
 " commands can be used to continue the completion with following words. Any
 " inserted key (even CTRL-R=...<CR>) would break this.
-inoremap <expr> <Plug>(CompleteStart) <SID>SetUndo().<SID>CheckCompletionPreview()
+inoremap <expr> <Plug>(CompleteStart) <SID>InputSave().<SID>SetUndo().<SID>CheckCompletionPreview()
 " Some completions may be triggered from other modes (e.g. MotionComplete allows
 " to select the completion base in visual / select mode).
-noremap  <expr> <Plug>(CompleteStart) <SID>SetUndo().<SID>CheckCompletionPreview()
-inoremap <expr> <SID>(CompleteStart) <SID>SetUndo().<SID>CheckCompletionPreview()
+noremap  <expr> <Plug>(CompleteStart) <SID>InputSave().<SID>SetUndo().<SID>CheckCompletionPreview()
+inoremap <expr> <SID>(CompleteStart) <SID>InputSave().<SID>SetUndo().<SID>CheckCompletionPreview()
 function! s:UndoLongest()
     " Only undo when the undo point is intact; i.e. the window, buffer and mark
     " are still the same.
@@ -675,16 +685,16 @@ if &completeopt =~# 'longest'
     " the literal terminal code for <Up>/<Down> (something like "Xkd"). Any
     " other intermediate no-op mapping will interfere with the (potentially
     " opened) completion popup menu, too.
-    inoremap <silent> <Plug>(CompleteoptLongestSelect)     <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
-    inoremap <silent>  <SID>(CompleteoptLongestSelectNext) <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
-    inoremap <silent>  <SID>(CompleteoptLongestSelectPrev) <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
+    inoremap <silent> <script> <Plug>(CompleteoptLongestSelect)     <SID>(InputRestore)<C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
+    inoremap <silent> <script>  <SID>(CompleteoptLongestSelectNext) <SID>(InputRestore)<C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
+    inoremap <silent> <script>  <SID>(CompleteoptLongestSelectPrev) <SID>(InputRestore)<C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
 else
     " Custom completion types are enhanced by defining custom mappings to the
     " <Plug>...Completion mappings in 00ingoplugin.vim. This is also defined
     " when the "longest" option isn't set, so that no check is necessary there.
-    inoremap <silent> <Plug>(CompleteoptLongestSelect) <Nop>
-    inoremap <silent> <SID>(CompleteoptLongestSelectNext) <Nop>
-    inoremap <silent> <SID>(CompleteoptLongestSelectPrev) <Nop>
+    inoremap <silent> <script> <Plug>(CompleteoptLongestSelect)    <SID>(InputRestore)
+    inoremap <silent> <script> <SID>(CompleteoptLongestSelectNext) <SID>(InputRestore)
+    inoremap <silent> <script> <SID>(CompleteoptLongestSelectPrev) <SID>(InputRestore)
 endif
 
 " Integration into ingosupertab.vim.
