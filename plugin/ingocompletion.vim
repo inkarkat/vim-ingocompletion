@@ -12,6 +12,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	046	18-Apr-2017	Switch <Plug>(CompleteoptLongestSelect) from
+"				<C-r> to :imap <expr> to avoid clobbering the
+"				expression register. It's still clobbered by
+"				many other completion actions, but it's a start
+"				(and easy here).
 "	045	05-Jan-2015	Elevate overrides of built-in completions out of
 "				the conditional, so that the wrappers and
 "				extensions are also active when 'completeopt'
@@ -675,9 +680,9 @@ if &completeopt =~# 'longest'
     " the literal terminal code for <Up>/<Down> (something like "Xkd"). Any
     " other intermediate no-op mapping will interfere with the (potentially
     " opened) completion popup menu, too.
-    inoremap <silent> <Plug>(CompleteoptLongestSelect)     <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
-    inoremap <silent>  <SID>(CompleteoptLongestSelectNext) <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
-    inoremap <silent>  <SID>(CompleteoptLongestSelectPrev) <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
+    inoremap <silent> <expr> <Plug>(CompleteoptLongestSelect)     pumvisible() ? "\<lt>Down>" : ""
+    inoremap <silent> <expr>  <SID>(CompleteoptLongestSelectNext) pumvisible() ? "\<lt>Down>" : ""
+    inoremap <silent> <expr>  <SID>(CompleteoptLongestSelectPrev) pumvisible() ? "\<lt>Up>" : ""
 else
     " Custom completion types are enhanced by defining custom mappings to the
     " <Plug>...Completion mappings in 00ingoplugin.vim. This is also defined
