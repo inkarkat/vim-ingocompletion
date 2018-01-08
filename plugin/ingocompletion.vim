@@ -12,6 +12,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	047	24-May-2017	Revert 046, as it broke the actual selection.
+"				Took me a long time to notice :-(
 "	046	18-Apr-2017	Switch <Plug>(CompleteoptLongestSelect) from
 "				<C-r> to :imap <expr> to avoid clobbering the
 "				expression register. It's still clobbered by
@@ -680,9 +682,9 @@ if &completeopt =~# 'longest'
     " the literal terminal code for <Up>/<Down> (something like "Xkd"). Any
     " other intermediate no-op mapping will interfere with the (potentially
     " opened) completion popup menu, too.
-    inoremap <silent> <expr> <Plug>(CompleteoptLongestSelect)     pumvisible() ? "\<lt>Down>" : ""
-    inoremap <silent> <expr>  <SID>(CompleteoptLongestSelectNext) pumvisible() ? "\<lt>Down>" : ""
-    inoremap <silent> <expr>  <SID>(CompleteoptLongestSelectPrev) pumvisible() ? "\<lt>Up>" : ""
+    inoremap <silent> <Plug>(CompleteoptLongestSelect)     <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
+    inoremap <silent>  <SID>(CompleteoptLongestSelectNext) <C-r>=pumvisible() ? "\<lt>Down>" : ""<CR>
+    inoremap <silent>  <SID>(CompleteoptLongestSelectPrev) <C-r>=pumvisible() ? "\<lt>Up>" : ""<CR>
 else
     " Custom completion types are enhanced by defining custom mappings to the
     " <Plug>...Completion mappings in 00ingoplugin.vim. This is also defined
