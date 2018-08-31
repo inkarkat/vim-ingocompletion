@@ -1,6 +1,7 @@
 " ingocompletion.vim: Customization of completions.
 "
 " DEPENDENCIES:
+"   - BuiltInCompletes.vim autoload script
 "   - ingo/os.vim autoload script
 "   - ingo/record.vim autoload script
 "   - ingo/window/preview.vim autoload script
