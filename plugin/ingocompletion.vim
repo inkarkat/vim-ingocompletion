@@ -2,6 +2,7 @@
 "
 " DEPENDENCIES:
 "   - BuiltInCompletes.vim autoload script
+"   - ingo/cursor/keep.vim autoload script
 "   - ingo/os.vim autoload script
 "   - ingo/record.vim autoload script
 "   - ingo/window/preview.vim autoload script
@@ -13,6 +14,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	048	01-Sep-2018	ENH: CompleteMultilineFix did not work when
+"                               auto-wrap already broke a complete multi-line
+"                               completion match into two lines, as happens
+"                               within Vimscript comments. Search the previous
+"                               line, and remove the ^@ plus comment prefix and
+"                               indent, then reformat.
 "	047	24-May-2017	Revert 046, as it broke the actual selection.
 "				Took me a long time to notice :-(
 "	046	18-Apr-2017	Switch <Plug>(CompleteoptLongestSelect) from
@@ -292,11 +299,31 @@ endif
 "			Usage: All CTRL-X_... completion mappings that may
 "			return multi-line matches must append
 "			<Plug>(CompleteMultilineFixSetup) to get this fix.
+function! s:HasAutoWrap()
+    return (&l:textwidth > 0 || &l:wrapmargin > 0) && &l:formatoptions =~# '[act]'
+endfunction
 function! s:CompleteMultilineFix()
     let l:textBeforeCursor = strpart(getline('.'), 0, col('.') - 1)
     let l:lastNewlineCol = strridx(l:textBeforeCursor, "\n")
     if l:lastNewlineCol == -1
-	" Nothing to do.
+	let l:previousLnum = line('.') - 1
+	if s:HasAutoWrap() && getline(l:previousLnum) =~# '\n'
+	    " Auto-wrap has already introduced a linebreak if the insertion of
+	    " the (multi-line) completion exceeded 'textwidth'. Remove the ^@
+	    " and any following comment prefix plus indent.
+	    let [l:before, l:after] = matchlist(getline(l:previousLnum), '^\(.*\)\n\(.*\)$')[1:2]
+	    let [l:indent, l:afterIndent] = ingo#comments#SplitIndentAndText(l:after)
+	    call setline(l:previousLnum, l:before . ' ' . l:afterIndent)
+
+	    " Reformat the current and previous lines. Ensure that the relative cursor
+	    " position does not change.
+	    call ingo#cursor#keep#WhileExecuteOrFunc(l:previousLnum, line('.'), l:previousLnum . 'normal! gqj')
+
+	    " Integration into CompleteHelper.vim.
+	    call CompleteHelper#Repeat#SetRecord()
+	else
+	    " Nothing to do.
+	endif
 	return ''
     endif
 
