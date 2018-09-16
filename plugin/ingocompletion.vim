@@ -20,6 +20,14 @@
 "                               within Vimscript comments. Search the previous
 "                               line, and remove the ^@ plus comment prefix and
 "                               indent, then reformat.
+"                               Cleanup: In s:CompleteMultilineFix(), remove the
+"                               conversion of non-breaking spaces needed to
+"                               overcome the thesaurus limitation of treating
+"                               whitespace as delimiters) to spaces. I had used
+"                               that for a short time in
+"                               s:CompleteThesaurusFix(), but had removed the
+"                               handling of \%d160 there, but apparently forgot
+"                               to remove it from s:CompleteMultilineFix(), too.
 "	047	24-May-2017	Revert 046, as it broke the actual selection.
 "				Took me a long time to notice :-(
 "	046	18-Apr-2017	Switch <Plug>(CompleteoptLongestSelect) from
@@ -325,10 +333,6 @@ function! s:CompleteMultilineFix()
 	    " Nothing to do.
 	endif
 	return ''
-    endif
-
-    if strridx(l:textBeforeCursor, nr2char(160)) != -1
-	substitute/\%d160/ /ge
     endif
 
     execute "substitute/\n/\\r/ge"
