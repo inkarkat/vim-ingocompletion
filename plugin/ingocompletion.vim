@@ -14,6 +14,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	049	17-Sep-2018	FIX: Typo.
+"				Regression: i_CTRL-E doesn't undo inline
+"				complete any longer in Vim 7.4+ (sometimes it
+"				works on second keypress). Cannot use
+"				CompleteDone here; keep using
+"				s:CompleteEntirelyDone.
 "	048	01-Sep-2018	ENH: CompleteMultilineFix did not work when
 "                               auto-wrap already broke a complete multi-line
 "                               completion match into two lines, as happens
@@ -617,7 +623,7 @@ imap <expr> <Esc>      pumvisible() && bufname('') !=# '[fuf]' ? <SID>DisableCom
 "			The first match is inserted fully, key repeats will step
 "			through the completion matches without showing a menu.
 function! s:IsInlineComplete()
-    " This function clears the stored w:IngoCompetion_InlineCompletePosition, so
+    " This function clears the stored w:IngoCompletion_InlineCompletePosition, so
     " that when an inline completion has no matches, the first <Esc> clears this
     " flag and jumps out of the completion submode, and the second <Esc> then
     " gets to exit from insert mode. Otherwise, each <Esc> would just repeat the
@@ -625,12 +631,12 @@ function! s:IsInlineComplete()
     " moves away from that position.
     " A consecutive CTRL-N at the same position will re-set the position through
     " its autocmd, anyway.
-    if exists('w:IngoCompetion_InlineCompletePosition')
-	if ingo#record#Position(1) == w:IngoCompetion_InlineCompletePosition
-	    unlet w:IngoCompetion_InlineCompletePosition
+    if exists('w:IngoCompletion_InlineCompletePosition')
+	if ingo#record#Position(1) == w:IngoCompletion_InlineCompletePosition
+	    unlet w:IngoCompletion_InlineCompletePosition
 	    return 1
 	endif
-	unlet w:IngoCompetion_InlineCompletePosition
+	unlet w:IngoCompletion_InlineCompletePosition
     endif
     return 0
 endfunction
@@ -652,7 +658,11 @@ function! s:InlineComplete( completionKey )
     let s:save_completeopt = &completeopt
     set completeopt=
     augroup InlineCompleteOff
-	execute 'autocmd!' s:CompleteDone '<buffer> let &completeopt = s:save_completeopt | let w:IngoCompetion_InlineCompletePosition = ingo#record#Position(1) | autocmd! InlineCompleteOff'
+	" Note: Cannot use CompleteDone here; during inline completion, that is
+	" fired only after additional, non-match characters have been typed /
+	" the completion sub-mode has been left. We really need the CursorMovedI
+	" here.
+	execute 'autocmd!' s:CompleteEntirelyDone '<buffer> let &completeopt = s:save_completeopt | let w:IngoCompletion_InlineCompletePosition = ingo#record#Position(1) | autocmd! InlineCompleteOff'
     augroup END
 
     if ! s:IsInlineComplete()
