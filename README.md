@@ -2,6 +2,17 @@ INGOCOMPLETION
 ===============================================================================
 _by Ingo Karkat_
 
+UNPUBLISHED AND UNSUPPORTED PLUGIN
+------------------------------------------------------------------------------
+
+Attention! This plugin has not (yet) been published and is only provided for
+discussions or demonstration. It may be abandoned, deleted, or radically
+changed without further notice. Documentation likely is absent or incomplete,
+severe bugs or security issues may exist, crucial dependencies or configuration
+may be completely missing. In other words, it may only work for me.
+You may still take inspiration from it, copy parts or try to use it (according
+to the license); just don't expect me to help you or offer any support at all.
+
 DESCRIPTION
 ------------------------------------------------------------------------------
 
@@ -139,9 +150,9 @@ plugmap
 CONTRIBUTING
 ------------------------------------------------------------------------------
 
-Report any bugs, send patches, or suggest features via the issue tracker at
-https://github.com/inkarkat/vim-ingocompletion/issues or email (address
-below).
+DO NOT report any bugs, send patches, or suggest features via the issue
+tracker at https://github.com/inkarkat/vim-ingocompletion/issues or email
+(address below).
 
 HISTORY
 ------------------------------------------------------------------------------
