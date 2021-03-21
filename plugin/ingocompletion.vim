@@ -40,10 +40,6 @@ inoremap <expr> <SID>(BuiltInOmniComplete) InsertAllCompletions#CompleteFunc#Set
 
 "- customization of completion behavior ----------------------------------------
 
-" CTRL-X CTRL-F		On Windows, when completing paths that only consist of
-"			forward slashes, temporarily set 'shellslash' so that
-"			the completion candidates use forward slashes instead of
-"			the default backslashes, too.
 if exists('+shellslash')
     function! s:CompleteFilePathSeparatorStart()
 	let l:startCol = searchpos('\f*\%#', 'bn', line('.'))[1]
@@ -75,18 +71,15 @@ endif
 
 "- popup menu mappings and behavior -------------------------------------------
 
-"			Fix the multi-line completion problem.
-"			Currently, completion matches are inserted literally,
-"			with newlines represented by ^@. Vim should expand this
-"			into proper newlines. We work around this via an autocmd
-"			that fires once after completion, and by hooking into
-"			the <CR> key. (<C-Y> apparently works even without
-"			this.)
-"			(FIXME: It seems to be fired once after the initial
-"			completion trigger with empty 'completeopt'.)
-"			Usage: All CTRL-X_... completion mappings that may
-"			return multi-line matches must append
-"			<Plug>(CompleteMultilineFixSetup) to get this fix.
+" Fix the multi-line completion problem.
+" Currently, completion matches are inserted literally, with newlines
+" represented by ^@. Vim should expand this into proper newlines. We work around
+" this via an autocmd that fires once after completion, and by hooking into the
+" <CR> key. (<C-Y> apparently works even without this.)
+" (FIXME: It seems to be fired once after the initial completion trigger with
+" empty 'completeopt'.)
+" Usage: All CTRL-X_... completion mappings that may return multi-line matches
+" must append <Plug>(CompleteMultilineFixSetup) to get this fix.
 function! s:HasAutoWrap()
     return (&l:textwidth > 0 || &l:wrapmargin > 0) && &l:formatoptions =~# '[act]'
 endfunction
@@ -242,9 +235,8 @@ function! s:CompleteThesaurusFixSetup()
 endfunction
 inoremap <expr> <SID>(CompleteThesaurusFixSetup) <SID>CompleteThesaurusFixSetup()
 
-" i_CTRL-G_CTRL-P	Show extra information about the currently selected
-"			completion in the preview window (if available). You
-"			need to re-enable this for each completion.
+
+
 function! s:EnableCompletionPreview()
     set completeopt+=preview
     return "\<Up>\<Down>"
@@ -261,11 +253,8 @@ function! s:DisableCompletionPreview( wrappedMapping )
 endfunction
 inoremap <expr> <C-g><C-p> pumvisible() ? <SID>EnableCompletionPreview() : '<C-g><C-p>'
 
-" <Enter>		Accept the currently selected match and stop completion.
-"			Alias for |i_CTRL-Y|.
-"			Another <Tab> will continue completion with the next
-"			word instead of restarting the completion; if you don't
-"			want this, use |i_CTRL-Y| instead.
+
+
 function! s:CompleteStopInsert()
     " This hook can be used by completion functions to immediately leave insert
     " mode after a completion match was chosen. Used by BidiComplete.
@@ -282,19 +271,8 @@ inoremap <silent> <expr> <Plug>PumCR <SID>DisableCompletionPreview('<C-y>').'<C-
 " longer.
 imap <silent> <expr> <CR> pumvisible() ? '<SID>PumCR' : '<CR>'
 
-"			Quick access accelerators for the popup menu:
-" 1-5			In the popup menu: Accept the first, second, ... visible
-"			offered match and stop completion.
-" 9-6			In the popup menu: Accept the last, second-from-last,
-"			... visible offered match and stop completion.
-"			These assume a freshly opened popup menu where no
-"			selection (via <Up>/<Down>/...) has yet been made.
-"			In a backward completion (first candidate at bottom),
-"			the counting starts from the bottom, too; i.e. 9 is the
-"			candidate displayed at the top of the completion popup.
-" <S-CR>		In the popup menu: Accept the second visible offered
-"			match and stop completion; shortcut for 2 that may be
-"			quicker to reach.
+
+
 inoremap <expr> 1 pumvisible() ? <SID>DisableCompletionPreview('<C-y>') : '1'
 inoremap <expr> 2 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up>'.<SID>DisableCompletionPreview('<C-y>')                 : '<Down>'.<SID>DisableCompletionPreview('<C-y>')                         : '2'
 imap <expr><S-CR> pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<Up>'.<SID>DisableCompletionPreview('<C-y>')                 : '<Down>'.<SID>DisableCompletionPreview('<C-y>')                         : '<Plug>(GotoNextLineAtSameColumn)'
@@ -306,20 +284,14 @@ inoremap <expr> 8 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp
 inoremap <expr> 7 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><Down>'.<SID>DisableCompletionPreview('<C-y>')       : '<PageDown><Up>'.<SID>DisableCompletionPreview('<C-y>')                 : '7'
 inoremap <expr> 6 pumvisible() ? ingosupertab#IsBackwardsCompletion() ? '<PageUp><Down><Down>'.<SID>DisableCompletionPreview('<C-y>') : '<PageDown><Up><Up>'.<SID>DisableCompletionPreview('<C-y>')             : '6'
 
-" Aliases for |popupmenu-keys|:
-" CTRL-F		Use a match several entries further. This doesn't work
-"			in filename completion, where CTRL-F goes to the next
-"			matching filename.
-" CTRL-B		Use a match several entries back.
+
 inoremap <script> <expr> <C-f> pumvisible() ? '<PageDown><Up><C-n>' : '<SID>(CompleteFilePathSeparatorStart)<SID>(CompleteStart)<C-x><C-f><SID>(CompleteoptLongestSelectNext)'
 inoremap <expr> <C-b> pumvisible() ? '<PageUp><Down><C-p>' : ''
 
-" <Esc>			Abort completion, go back to what was typed.
-"			In contrast to |i_CTRL-E|, this also erases the longest
-"			common string.
+
+
 " Note: To implement the total abort of completion, all mappings that start a
 " completion must prepend <Plug>(CompleteStart).
-
 function! s:RecordUndoPoint( positionExpr )
     " The undo point record consists of the position of a:positionExpr and the
     " buffer number. When this position record is assigned to a window-local
@@ -390,12 +362,6 @@ imap <expr> <Esc>      pumvisible() && bufname('') !=# '[fuf]' ? <SID>DisableCom
 
 "- inline completion without popup menu ---------------------------------------
 
-" i_CTRL-N / i_CTRL-P	Inline completion without popup menu:
-"			Find next/previous match for words that start with the
-"			keyword in front of the cursor, looking in places
-"			specified with the 'complete' option.
-"			The first match is inserted fully, key repeats will step
-"			through the completion matches without showing a menu.
 function! s:IsInlineComplete()
     " This function clears the stored w:IngoCompletion_InlineCompletePosition, so
     " that when an inline completion has no matches, the first <Esc> clears this
@@ -451,14 +417,6 @@ endfunction
 inoremap <expr> <SID>InlineCompleteNext <SID>InlineComplete("\<lt>C-n>")
 inoremap <expr> <SID>InlineCompletePrev <SID>InlineComplete("\<lt>C-p>")
 
-"			One can abort the completion and return to what was
-"			inserted beforehand via <C-E>, or accept the currently
-"			selected match and stop completion with <C-Y>.
-"			It is not possible to abort via <Esc>, because that
-"			would clash with stopping insertion at all; i.e. it
-"			would then not be possible to exit insert mode after an
-"			inline completion without typing and removing an
-"			additional character.
 inoremap <expr> <SID>CompletedCall ingosupertab#Completed()
 "imap <expr> <C-e> pumvisible() ? <SID>DisableCompletionPreview('<C-e>') : <SID>IsInlineComplete() ? <SID>UndoLongest()        : '<C-E>'
 "imap <expr> <C-y> pumvisible() ? <SID>DisableCompletionPreview('<C-y>') : <SID>IsInlineComplete() ? ' <BS><SID>CompletedCall' : '<C-Y>'
@@ -470,13 +428,6 @@ imap <expr> <C-y> pumvisible() ? <SID>DisableCompletionPreview('<C-y>') : <SID>I
 
 "- complete longest + preselect -----------------------------------------------
 
-" Complete longest+preselect: On completion with multiple matches, insert the
-" longest common text AND pre-select (but not yet insert) the first match.
-" When 'completeopt' contains "longest", only the longest common text of the
-" matches is inserted. I want to combine this with automatic selection of the
-" first match so that I can both type more characters to narrow down the
-" matches, or simply press <Enter> to accept the first match or press CTRL-N to
-" use the next match.
 " To achieve this, all completion mappings must preselect the first match in
 " case of multiple matches. This is achieved by having the
 " <Plug>(CompleteoptLongestSelect) mapping appended to all built-in and custom
@@ -564,16 +515,10 @@ inoremap <script> <expr> <C-x><C-d> pumvisible() ? '<Up><C-n><C-x><C-d>' : '<SID
 
 "- Additional completion triggers ---------------------------------------------
 
-" Shorten some commonly used insert completions.
-" i_CTRL-F		File name completion |i_CTRL-X_CTRL-F|
 " Note: The CTRL-F mapping is included in the popupmenu overload above.
 "imap <C-f> <C-x><C-f>
 
 
-" vimtip #1228, vimtip #1386: Completion popup selection like other IDEs.
-" i_CTRL-Space		IDE-like generic completion (via the last-used omni
-"			completion ('omnifunc'). Also cycles through matches
-"			when the completion popup is visible.
 "inoremap <expr> <C-Space>  pumvisible() ? "<C-N>" : "<C-N><C-R>=pumvisible() ? \"\\<lt>Down>\" : \"\"<CR>"
 if has('gui_running') || ingo#os#IsWinOrDos()
     inoremap <script> <expr> <C-Space> pumvisible() ? '<C-n>' : '<SID>(CompleteStart)<C-x><C-o><SID>(CompleteoptLongestSelectNext)<SID>(BuiltInOmniComplete)'
@@ -584,10 +529,6 @@ endif
 
 
 
-" CTRL-X [N] CTRL-D	Limit 'dictionary' to the [N]'th entry for this
-"			triggered |i_CTRL-X_CTRL-D| completion.
-" CTRL-X [N] CTRL-T	Limit 'thesaurus' to the [N]'th entry for this
-"			triggered |i_CTRL-X_CTRL-T| completion.
 function! s:ChooseOptionFile( optionName, count )
     execute 'let l:optionValue = &' . a:optionName
     let l:allOptions = ingo#option#Split(l:optionValue)
