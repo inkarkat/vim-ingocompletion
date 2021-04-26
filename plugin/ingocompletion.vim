@@ -472,6 +472,7 @@ endfunction
 function! ingocompletion#ContinueComplete()
     return (pumvisible() ? "\<Down>\<C-p>\<C-x>\<C-p>" : "\<C-x>\<C-p>\<C-r>=empty(InsertAllCompletions#CompleteFunc#Set(" . string(ingocompletion#IngoSuperTabCompleteFunc()) . ',' . ingosupertab#IsBackwardsCompletion() . ")) && pumvisible() ? \"\\<Up>\" : \"\"\<CR>")
 endfunction
+unlet! g:IngoSuperTab_complete g:IngoSuperTab_continueComplete
 let g:IngoSuperTab_complete = function('ingocompletion#Complete')
 let g:IngoSuperTab_continueComplete = function('ingocompletion#ContinueComplete')
 
