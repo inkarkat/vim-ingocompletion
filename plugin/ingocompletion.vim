@@ -130,6 +130,8 @@ function! s:CompleteMultilineFixSetup()
     return ''
 endfunction
 inoremap <expr> <Plug>(CompleteMultilineFixSetup) <SID>CompleteMultilineFixSetup()
+inoremap <silent> <SID>(CompleteMultilineFix) <C-r>=<SID>CompleteMultilineFix()<CR>
+endif
 
 function! CompleteThesaurusMod( start )
     " Insert the temporary Unit Separator in position a:start, and adapt the
@@ -265,8 +267,8 @@ function! s:CompleteStopInsert()
 	return ''
     endif
 endfunction
-inoremap <silent> <expr>  <SID>PumCR <SID>DisableCompletionPreview('<C-y>').'<C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR><C-r>=<SID>CompleteStopInsert()<CR>'
-inoremap <silent> <expr> <Plug>PumCR <SID>DisableCompletionPreview('<C-y>').'<C-r>=ingosupertab#Completed()<CR><C-r>=<SID>CompleteMultilineFix()<CR><C-r>=<SID>CompleteStopInsert()<CR>'
+inoremap <silent> <script> <expr>  <SID>PumCR <SID>DisableCompletionPreview('<C-y>').'<C-r>=ingosupertab#Completed()<CR><SID>(CompleteMultilineFix)<C-r>=<SID>CompleteStopInsert()<CR>'
+inoremap <silent> <script> <expr> <Plug>PumCR <SID>DisableCompletionPreview('<C-y>').'<C-r>=ingosupertab#Completed()<CR><SID>(CompleteMultilineFix)<C-r>=<SID>CompleteStopInsert()<CR>'
 " Note: Cannot use :inoremap here; abbreviations wouldn't be expanded any
 " longer.
 imap <silent> <expr> <CR> pumvisible() ? '<SID>PumCR' : '<CR>'
