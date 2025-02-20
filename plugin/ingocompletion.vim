@@ -72,6 +72,10 @@ endif
 "- popup menu mappings and behavior -------------------------------------------
 
 " Fix the multi-line completion problem.
+if v:version == 901 && has('patch1086') || v:version > 901
+inoremap <Plug>(CompleteMultilineFixSetup) <Nop>
+inoremap <silent> <SID>(CompleteMultilineFix) <Nop>
+else
 " Currently, completion matches are inserted literally, with newlines
 " represented by ^@. Vim should expand this into proper newlines. We work around
 " this via an autocmd that fires once after completion, and by hooking into the
